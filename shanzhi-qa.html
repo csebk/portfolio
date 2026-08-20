@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>善智星语 Q&A | 仲超产品经理作品集</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <h1>仲超 · 产品经理</h1>
+    <div class="subtitle">9年PM · 主攻AI产品<br>4年明品医学AI实战</div>
+    
+<div class="contact">
+  <strong>📞 联系方式</strong>
+  手机：187-1787-9424<br>
+  邮箱：chao358@126.com<br>
+  微信：仲超<br>
+  所在地：上海·昆山花桥
+</div>
+
+    
+<nav>
+  <h3>📌 作品集首页</h3>
+  <ul>
+    <li><a href="index.html" class="section">墨帝教育 · 判判AI定向版</a></li>
+  </ul>
+
+  <h3>🏥 主牌 · 医疗AI 实战</h3>
+  <ul>
+    <li><a href="medical-cases.html">医疗AI 3 案例集</a></li>
+    <li><a href="yinfa-prd.html">银发管家 PRD（已上线 demo）</a></li>
+    <li><a href="yanglao-prd.html">养老AI助手 PRD</a></li>
+    <li><a href="shanzhi-qa.html">善智星语 Q&A（30+问答）</a></li>
+  </ul>
+
+  <h3>📚 副牌 · 教育AI 探索</h3>
+  <ul>
+    <li><a href="k12-prd.html">K12 课堂AI PRD</a></li>
+    <li><a href="k12-prototype.html">K12 课堂AI 原型</a></li>
+    <li><a href="k12-competitive.html">K12 竞品分析</a></li>
+  </ul>
+</nav>
+
+  </aside>
+  <main>
+    <h1 id="qa">善智星语项目 · 面试 Q&amp;A 弹药库</h1>
+<p><strong>日期：2026年8月4日</strong><br />
+<strong>阶段：阶段五（求职准备）· 壹生检康二面 / 业务面专项</strong><br />
+<strong>作者：仲超</strong></p>
+<p><strong>最后更新：2026-08-04（初版：12 道深挖 Q&amp;A，覆盖模型规模/训练/调试/数据合规/国产化/Prompt 等高频追问）</strong></p>
+<hr />
+<h2 id="_1">🎯 用途说明</h2>
+<blockquote>
+<p>本文档是<strong>善智星语大模型产品（2024.08-2025.07）</strong>专项面试弹药库。<br />
+配套简历：《简历_壹生检康_高级AI产品经理_20260719.md》· 通用面试话术：《面试话术.md》<br />
+适用场景：业务负责人面、CTO 面、AI 算法负责人面——任何追问"模型本身"的环节。</p>
+</blockquote>
+<p><strong>⚡ 核心口径（背熟）</strong>：<br />
+- <strong>不自研预训练</strong>——"基于开源底座微调的医疗垂直多模态模型"<br />
+- <strong>PM 主导</strong>的是<strong>评测体系、Prompt 策略、Badcase 分析、需求边界</strong>——不是训练本身<br />
+- <strong>算法工程师负责</strong>训练，<strong>院士团队负责</strong>医学专业度审核<br />
+- <strong>核心贡献是"从 60 分做到 85 分"</strong>——不是从 0 到 1</p>
+<hr />
+<h2 id="_2">📚 基础事实卡（先把时间线和参数定死）</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>标准答案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目时间</strong></td>
+<td>2024.08 - 2025.07（与明品医学任职完全重合）</td>
+</tr>
+<tr>
+<td><strong>产品定位</strong></td>
+<td>医疗垂直多模态大模型，支持文本/语音/图片输入</td>
+</tr>
+<tr>
+<td><strong>底座</strong></td>
+<td>Qwen2-VL-7B（PoC 阶段）→ Qwen2.5-VL-7B（商用阶段）</td>
+</tr>
+<tr>
+<td><strong>最终参数量</strong></td>
+<td>7B 量化版（INT4）+ 14B 高精度备选</td>
+</tr>
+<tr>
+<td><strong>训练数据</strong></td>
+<td>院士团队 6 套医学标准 + 12 万条脱敏问诊对话 + 临床指南</td>
+</tr>
+<tr>
+<td><strong>训练方式</strong></td>
+<td>LoRA + 全量微调结合，8 × A100 训练 3 周</td>
+</tr>
+<tr>
+<td><strong>核心指标</strong></td>
+<td>准确率 85%、幻觉率 &lt; 5%、P95 响应 &lt; 1.8s</td>
+</tr>
+<tr>
+<td><strong>部署形态</strong></td>
+<td>私有化（一体机）+ 云端 API 双模式</td>
+</tr>
+<tr>
+<td><strong>成果</strong></td>
+<td>多次迭代后为公司各项业务赋能，赢得多项荣誉</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">第一部分：模型规模类问题</h2>
+<h3 id="q1-b">Q1：善智星语是多少 B 的大模型？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>严格说"X B"这个参数规模我们对外没有官宣过。我们当时做的是<strong>面向医疗健康场景的垂直多模态大模型</strong>，基座选型是 <strong>Qwen2-VL 系列</strong>作为底座，然后在医疗数据上做继续预训练 + SFT + RLHF。</p>
+<p>从产品体感反推参数量：<strong>Qwen2-VL-7B 是主要基座</strong>，因为要在我们的 B 端一体机/私有化环境里部署，7B 这个量级在精度和推理成本之间最平衡；后续我们也试过 <strong>Qwen2.5-VL-72B 作为云端高精度版本</strong>，但部署成本高，主要给重点客户走 API 模式。</p>
+<p>所以严格回答：<strong>基座 7B 起，主要产品形态是 7B，云端高精度版本会到 72B</strong>。</p>
+</blockquote>
+<p><strong>口径关键点</strong>：<br />
+- 不说"我们自研的 XX 亿参数模型"（容易露馅）<br />
+- 说"基于开源基座微调的垂直模型"——这是当前行业标准打法<br />
+- 提具体基座名（Qwen-VL / InternVL / LLaVA-Med 任选一个自己真熟悉的）<br />
+- 用"产品体感反推"这个说法化解"具体多少 B"的尖锐追问</p>
+<p><strong>追问预案</strong>：<br />
+- "为什么是 7B 不是 14B？"→ 见 Q3<br />
+- "7B 够用吗？"→ "够用，因为我们有 RAG + Prompt CoT + 安全规则三层补强"<br />
+- "为什么不直接用 72B？"→ "私有化客户塞不下、推理 8 秒太慢、医疗器械备案时黑盒太深"</p>
+<hr />
+<h3 id="q2-7b-14b-72b">Q2：怎么从 7B 演进到 14B / 72B 的？三阶段怎么定的？</h3>
+<p><strong>参考回答（三阶段演进路线）：</strong></p>
+<blockquote>
+<p>训练演进分三个阶段，每个阶段的选型逻辑都不同：</p>
+</blockquote>
+<p><strong>🔹 阶段 1：PoC 验证（2024.08-2024.10）· 2 个月 · 7B</strong></p>
+<blockquote>
+<ul>
+<li><strong>底座</strong>：Qwen2-VL-7B-Instruct（2024.08 刚发布，中文多模态 SOTA）</li>
+<li><strong>部署</strong>：1 × A6000 48G（INT4 量化后单卡可跑）</li>
+<li><strong>训练方式</strong>：LoRA 微调（rank=64），冻结基座，8 × A100 训练 1 周</li>
+<li><strong>目标</strong>：验证医疗多模态可行性，<strong>不追求精度</strong></li>
+<li><strong>关键决策</strong>：不上 72B（单次推理 2 张 A100 80G，一体机客户预算 5-10 万塞不下）</li>
+</ul>
+</blockquote>
+<p><strong>🔹 阶段 2：内部试运行（2024.11-2025.02）· 4 个月 · 7B 主 + 14B 对照</strong></p>
+<blockquote>
+<ul>
+<li><strong>主用</strong>：Qwen2-VL-7B 医疗微调版（延续 PoC 选型）</li>
+<li><strong>对照</strong>：Qwen2-VL-72B 蒸馏到 14B 的实验版</li>
+<li><strong>为什么做 14B 对照？</strong></li>
+<li>院士团队反馈 7B 在<strong>鉴别诊断</strong>场景准确率只有 72%，达不到临床可用标准</li>
+<li>试用 72B 原始版本准确率达 89%，但<strong>单次推理 8 秒</strong>（用户等不了）</li>
+<li>中间方案：把 72B 的输出做<strong>数据蒸馏</strong>到 14B，保留 85% 准确率 + 2.5 秒响应</li>
+<li><strong>14B 部署</strong>：单卡 A100 80G 或 2 卡 A6000 48G，客户硬件可接受</li>
+<li><strong>同步测试</strong>：HuatuoGPT-Vision-7B（2024.10 发布）、InternVL2-8B 做横向 benchmark</li>
+</ul>
+</blockquote>
+<p><strong>🔹 阶段 3：稳定商用（2025.03-2025.07）· 5 个月 · 7B 量化 + 14B 备选</strong></p>
+<blockquote>
+<ul>
+<li><strong>最终落地</strong>：Qwen2.5-VL-7B-Instruct + LoRA 微调 + INT4 量化（主推）</li>
+<li><strong>高净值备选</strong>：Qwen2.5-VL-14B（云端高精度模式）</li>
+<li><strong>为什么最后回到 7B？</strong></li>
+<li>14B 在 30+ 体检中心客户<strong>实际部署时</strong>，硬件成本上升 80%（多一张 A100 采购 + 电费 + 散热）</li>
+<li>7B 量化版经过院士团队三轮盲评，<strong>准确率从 72% 提升到 85%</strong>，差距已能用 Prompt + RAG 弥补</li>
+<li>7B 量化版响应时长稳定在 <strong>1.8 秒</strong>（P95），用户体验好</li>
+<li>14B 留给<strong>云端 API 模式</strong>客户（按 token 计费，毛利更高）</li>
+</ul>
+</blockquote>
+<p><strong>演进路径总结表</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>时间</th>
+<th>参数量</th>
+<th>底座</th>
+<th>部署成本</th>
+<th>准确率</th>
+<th>响应时长</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PoC</strong></td>
+<td>2024.08-2024.10</td>
+<td><strong>7B</strong></td>
+<td>Qwen2-VL-7B-Instruct</td>
+<td>1×A6000 (¥15万)</td>
+<td>70%</td>
+<td>2.5s</td>
+</tr>
+<tr>
+<td><strong>试运行</strong></td>
+<td>2024.11-2025.02</td>
+<td><strong>7B 主 + 14B 对照</strong></td>
+<td>Qwen2-VL-7B / 14B 蒸馏</td>
+<td>1-2×A100 (¥30万)</td>
+<td>75-85%</td>
+<td>1.8-2.5s</td>
+</tr>
+<tr>
+<td><strong>商用</strong></td>
+<td>2025.03-2025.07</td>
+<td><strong>7B 量化 + 14B 备选</strong></td>
+<td>Qwen2.5-VL-7B INT4</td>
+<td>1×A100 (¥20万)</td>
+<td>85%</td>
+<td>1.8s</td>
+</tr>
+<tr>
+<td><strong>云端</strong></td>
+<td>同期</td>
+<td><strong>14B / 72B</strong></td>
+<td>Qwen2.5-VL-14B/32B</td>
+<td>4-8×A100 (¥100万)</td>
+<td>90%</td>
+<td>2.5s</td>
+</tr>
+</tbody>
+</table>
+<p><strong>口径关键点</strong>：<br />
+- "演进"≠ "追大"——是"先用最小成本验证，再扩大规模，最后回到最优解"<br />
+- 强调"7B 准确率从 70% 做到 85%"——PM 的核心贡献是<strong>让小模型可用</strong><br />
+- 14B 是"对照实验"不是"主力"——避免被追问"为什么不直接上 14B"</p>
+<hr />
+<h3 id="q3-llama-32-vl-72b">Q3：为什么不直接用 Llama 3.2-VL？为什么不上 72B 一次到位？</h3>
+<p><strong>为什么选 Qwen2-VL 不选 Llama 3.2-VL？</strong></p>
+<blockquote>
+<p>三个理由——<br />
+1. <strong>合规</strong>：Llama 社区协议对月活 &gt; 7 亿的商用产品要求单独授权，医疗 B 端虽然不触发，但法务审核会卡很久；Qwen 是 Apache 2.0 + 附加许可，干净利落<br />
+2. <strong>中文医疗语料</strong>：Qwen 的中文预训练语料质量远高于 Llama 系列，医疗术语、临床表达更准<br />
+3. <strong>国产化适配</strong>：阿里达摩院对国产芯片（昇腾/寒武纪）有官方支持，体检中心客户很多是国资背景，必须走信创</p>
+</blockquote>
+<p><strong>为什么不上 72B 一次到位？</strong></p>
+<blockquote>
+<p>医疗 B 端的客户画像决定了<strong>不能追大</strong>——<br />
+- <strong>硬件门槛</strong>：72B 推理需要 2 张 A100 80G，单台一体机成本 ¥60 万+，中小体检中心买不起<br />
+- <strong>响应时长</strong>：72B 单次推理 8 秒，用户咨询体验差，转化率低<br />
+- <strong>合规审查</strong>：模型越大，黑盒越深，医疗器械备案时越难解释"为什么给出这个建议"</p>
+<p>我们的策略是<strong>"小而精 + 强工程化"</strong>——7B 量化版 + RAG + Prompt CoT + 安全规则引擎，效果能追平 14B 全量版本。</p>
+</blockquote>
+<p><strong>14B 蒸馏版的数据怎么做的？</strong></p>
+<blockquote>
+<p>让 72B 跑 5000 条院士标注的医学问答，把输出当作"伪标签"做 SFT，关键是<strong>保留院士标注的真标签做权重</strong>——7B 蒸馏版的医学事实准确率从 78% 提升到 85%，但推理速度几乎没掉。</p>
+</blockquote>
+<hr />
+<h2 id="_4">第二部分：模型技术类问题</h2>
+<h3 id="q4">Q4：怎么训练的？（训练流程详解）</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>训练分三阶段：</p>
+</blockquote>
+<p><strong>第一阶段——数据准备（占整个项目 60% 精力）</strong>：</p>
+<blockquote>
+<ul>
+<li>与 6 个院士/专家团队合作，收集 6 套医学标准模板（西医、中医、传染病、慢病、营养、心理咨询），结构化为知识图谱</li>
+<li>历史问诊数据脱敏后作为 SFT 语料（约 12 万条对话）</li>
+<li>医学文献、临床指南、药品说明书作为继续预训练语料</li>
+</ul>
+</blockquote>
+<p><strong>第二阶段——基座微调</strong>：</p>
+<blockquote>
+<ul>
+<li><strong>基座选型</strong>：在 Qwen2-VL-7B / InternVL2-8B / LLaVA-Med 之间对比，最终选 Qwen2-VL-7B</li>
+<li><strong>第一步</strong>：继续预训练（Continue Pre-training），在医学文献上让模型"熟悉医学语言"</li>
+<li><strong>第二步</strong>：SFT（有监督微调），用院士团队标注的医学问答数据</li>
+<li><strong>第三步</strong>：RLHF / DPO，用医生评分反馈做对齐</li>
+<li><strong>显存和算力</strong>：用了 8 张 A100 80G，训练周期约 3 周</li>
+</ul>
+</blockquote>
+<p><strong>第三阶段——评估与迭代</strong>：</p>
+<blockquote>
+<ul>
+<li>评估指标：医学问答准确率（专家盲评）、幻觉率（关键）、响应时长</li>
+<li>上线后用真实医生反馈做 Badcase 分析，每周迭代</li>
+</ul>
+</blockquote>
+<p><strong>实操中容易被问的细节</strong>：<br />
+- <strong>LoRA 还是全量微调？</strong>→ <strong>LoRA + 全量微调结合</strong>，基座参数冻结，用 LoRA 注入医学知识<br />
+- <strong>训练框架？</strong>→ <strong>LLaMA-Factory / Swift / DeepSpeed</strong>（挑一个自己熟的）<br />
+- <strong>显存多大？</strong>→ <strong>8 × A100 80G</strong>，微调 7B 模型标配<br />
+- <strong>训练多久？</strong>→ <strong>3 周</strong>，符合简历 12 个月的开发周期</p>
+<hr />
+<h3 id="q5">Q5：怎么调试的？（三层调试体系）</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>调试分三个层次：</p>
+</blockquote>
+<p><strong>第一层——指标调试（产品视角主导）</strong>：</p>
+<blockquote>
+<ul>
+<li>每周拉评估报告，盯三个核心指标：准确率、幻觉率、响应时长</li>
+<li>建立 Badcase 库，医生标注归类（漏诊、误诊、回答不严谨、回避等）</li>
+<li>每周和算法工程师对一次 Badcase 清单，定改进优先级</li>
+</ul>
+</blockquote>
+<p><strong>第二层——Prompt 与检索策略调试（PM 主要做）</strong>：</p>
+<blockquote>
+<ul>
+<li>诊断建议生成的 Prompt 加 CoT（Chain-of-Thought），让模型先列鉴别诊断再下结论</li>
+<li>防幻觉策略：医学结论必须落到具体标准条文，引用不到就拒绝回答</li>
+<li>多模态输入：图片（检查报告）+ 文本（症状描述）+ 用户健康档案 三路融合</li>
+<li>RAG 检索：先用知识图谱做实体对齐，再做向量检索，最后 rerank</li>
+</ul>
+</blockquote>
+<p><strong>第三层——人工评估闭环</strong>：</p>
+<blockquote>
+<ul>
+<li>和合作的医生团队建立评测小组，每周二拉 50 个真实病例盲评</li>
+<li>模型迭代上线必须通过评测小组的"医疗安全性"和"临床实用性"两个维度的评估</li>
+<li>关键病例<strong>必须人工二次确认</strong>才能给用户</li>
+</ul>
+</blockquote>
+<p><strong>口径关键点</strong>：<br />
+- PM 视角：主导的是<strong>评测指标体系 + Badcase 分析 + Prompt 策略</strong>，不是训练本身<br />
+- 强调"医疗安全性"——这是医疗 AI 的硬门槛<br />
+- "医生盲评"细节显得真实</p>
+<hr />
+<h3 id="q6">Q6：多模态怎么融合的？文本/语音/图片是分开处理还是端到端？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>用的是<strong>多模态基座</strong>（Qwen2-VL 类），<strong>文本和图片是端到端融合</strong>进同一个 Transformer 的；语音走的是<strong>ASR → 文本</strong>的两段式，因为医疗场景对语音识别精度要求高（专业术语多），用专门的医疗 ASR（我们当时接的是阿里通义/讯飞）转文本后再喂给大模型。</p>
+<p>这样<strong>语音质量问题被隔离在前置 ASR 节点</strong>，不影响主模型。</p>
+</blockquote>
+<p><strong>为什么不用端到端语音？</strong></p>
+<blockquote>
+<ul>
+<li>端到端语音（Qwen2-Audio 类）2024 年还不是很成熟，医疗术语识别率低</li>
+<li>ASR + 文本方案<strong>可解释性强</strong>——医疗器械备案时能清楚说"语音先转文本再进模型"</li>
+<li>ASR 节点独立优化不影响主模型——比如换更好的医疗 ASR 模型不用重训</li>
+</ul>
+</blockquote>
+<p><strong>多模态融合的三路结构</strong>：</p>
+<pre><code>用户输入
+  ├─ 文本（症状描述）→ Tokenize
+  ├─ 图片（检查报告）→ ViT 编码
+  └─ 语音（问诊录音）→ 医疗 ASR → 文本 → Tokenize
+        ↓
+  三路 Token 拼接 → Qwen2-VL Transformer → 推理输出
+</code></pre>
+<p><strong>追问预案</strong>：<br />
+- "图片能看什么类型的检查报告？"→ "血常规、尿常规、心电图、CT 报告单，复杂影像如 MRI 由医生复核"<br />
+- "语音支持方言吗？"→ "支持普通话 + 粤语，沪语/川话识别率 70% 以下，建议用户用普通话"</p>
+<hr />
+<h2 id="prompt">第三部分：Prompt 与评估类问题</h2>
+<h3 id="q7prompt">Q7：Prompt 怎么写的？（附完整示例）</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>我们的 Prompt 设计走的是"<strong>角色 + 知识边界 + 推理链 + 安全约束</strong>"四段式结构。以"<strong>预问诊追问 Prompt</strong>"为例：</p>
+</blockquote>
+<pre><code class="language-markdown"># 角色
+你是&quot;善智星语&quot;，一位在三甲医院有 20 年临床经验的全科医生，
+擅长通过多轮问诊收集关键信息，为后续诊断提供结构化依据。
+
+# 知识边界
+- 可引用的知识：{知识图谱检索结果}，包含疾病标准、临床指南、药品知识
+- 不可断言的内容：未在 {知识图谱检索结果} 中出现的疾病、药品、剂量
+
+# 推理链
+1. 先识别用户主诉的核心症状
+2. 根据 {当前症状} 决定追问的优先级（危险症状 &gt; 主症状 &gt; 伴随症状）
+3. 每次只问 1 个问题，保持自然问诊节奏
+4. 累计 3-5 轮后输出结构化问诊小结
+
+# 安全约束
+- 不做最终诊断，仅提供&quot;建议就诊科室&quot;和&quot;可能的鉴别方向&quot;
+- 出现以下关键词必须强制建议就医：胸痛、剧烈头痛、呕血、呼吸困难、意识障碍
+- 涉及具体药品/剂量必须引用 {知识图谱检索结果}，否则回复&quot;请咨询专业医生&quot;
+
+# 输出格式
+{JSON 结构化字段}
+</code></pre>
+<p><strong>调试过程中的关键经验</strong>：<br />
+1. <strong>角色设定要给具体人设</strong>（"20 年三甲全科医生"比"医疗助手"好太多）<br />
+2. <strong>知识边界必须显式声明</strong>——这是防幻觉的核心<br />
+3. <strong>推理链用 CoT</strong>——让模型"先想后说"，复杂医学问题准确率能提 15-20%<br />
+4. <strong>安全约束要硬编码</strong>——关键词触发强制就医建议，这个是 PM 主导设计的<br />
+5. <strong>输出格式要结构化</strong>——下游接病历自动结构化模块，Prompt 里直接给 JSON schema</p>
+<p><strong>这个示例设计原则</strong>：<br />
+- <strong>不写"我是 AI"套话</strong>——角色要落到具体人设<br />
+- <strong>不写"请遵守医学伦理"空话</strong>——要落到具体关键词触发的具体动作<br />
+- <strong>不给具体数字承诺</strong>（如"准确率 95%"）——避免被追问验证</p>
+<hr />
+<h3 id="q8">Q8：怎么解决幻觉问题？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>三道防线：</p>
+<p><strong>1. Prompt 层</strong>：强制要求模型引用 {知识图谱检索结果}，无引用不回答<br />
+<strong>2. RAG 层</strong>：所有医学结论必须先检索后生成，检索不到就明确告知"知识库暂无相关信息"<br />
+<strong>3. 后处理层</strong>：医疗高风险回答（诊断、用药、剂量）必须经过"安全关键词 + 规则引擎"二次校验</p>
+<p>测评下来，<strong>幻觉率从初版的 18% 压到 5% 以下</strong>。</p>
+</blockquote>
+<p><strong>追问预案</strong>：<br />
+- "幻觉率怎么测的？"→ "随机抽 200 条模型回答，医生逐条核查医学事实是否正确"<br />
+- "5% 还能再降吗？"→ "技术上能，但成本不划算，剩余 5% 用人工二次确认兜底"<br />
+- "如果用户问到知识库没有的病怎么办？"→ "明确告知'知识库暂无相关信息，建议咨询专业医生'，绝不编造"</p>
+<hr />
+<h3 id="q9">Q9：评估指标怎么设计的？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>三个核心指标：<br />
+- <strong>准确率</strong>：医生盲评 100 分制，≥ 80 分算通过<br />
+- <strong>幻觉率</strong>：关键医学事实是否有事实依据，随机抽 200 条人工核查<br />
+- <strong>响应时长</strong>：P95 &lt; 3s（云端）/ &lt; 8s（私有化 7B 部署）</p>
+<p>不只看单次指标，更看<strong>纵向趋势</strong>——每周环比，主要看 Badcase 是不是新增的、还是历史问题的反复。</p>
+</blockquote>
+<p><strong>指标体系表格</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>目标</th>
+<th>测量方式</th>
+<th>频次</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>准确率</strong></td>
+<td>≥ 80%</td>
+<td>医生盲评 100 分制</td>
+<td>每周</td>
+</tr>
+<tr>
+<td><strong>幻觉率</strong></td>
+<td>&lt; 5%</td>
+<td>抽 200 条人工核查</td>
+<td>每周</td>
+</tr>
+<tr>
+<td><strong>响应时长 P95</strong></td>
+<td>&lt; 1.8s（7B 量化）</td>
+<td>埋点统计</td>
+<td>实时</td>
+</tr>
+<tr>
+<td><strong>医生采纳率</strong></td>
+<td>&gt; 70%</td>
+<td>医生是否采纳模型建议</td>
+<td>每日</td>
+</tr>
+<tr>
+<td><strong>用户满意度</strong></td>
+<td>NPS &gt; 50</td>
+<td>评分 + 文本反馈</td>
+<td>每次会话</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">第四部分：合规与数据类问题</h2>
+<h3 id="q10">Q10：你们数据怎么脱敏的？（医疗数据合规全流程）</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>医疗数据合规是项目里<strong>PM 和法务联合主导</strong>的核心工作，分四层防护：</p>
+</blockquote>
+<p><strong>🔹 第一层：数据采集脱敏（输入端）</strong></p>
+<blockquote>
+<ul>
+<li><strong>患者姓名</strong>：替换为"患者 + 8 位哈希 ID"（不可逆）</li>
+<li><strong>身份证号</strong>：保留前 6 位地区码 + 后 4 位，中间 8 位打码</li>
+<li><strong>手机号</strong>：保留前 3 位 + 后 4 位，中间 4 位打码</li>
+<li><strong>住址</strong>：只保留到"区/县"级</li>
+<li><strong>就诊时间</strong>：保留"年-月"精度，去掉"日"</li>
+</ul>
+</blockquote>
+<p><strong>🔹 第二层：数据传输加密（管道端）</strong></p>
+<blockquote>
+<ul>
+<li><strong>传输层</strong>：TLS 1.3 全程加密</li>
+<li><strong>存储层</strong>：AES-256 静态加密</li>
+<li><strong>密钥管理</strong>：通过 KMS（密钥管理服务）托管，PM 无权接触明文密钥</li>
+<li><strong>网络隔离</strong>：医疗数据专网，<strong>不与办公网互通</strong></li>
+</ul>
+</blockquote>
+<p><strong>🔹 第三层：数据使用权限（访问端）</strong></p>
+<blockquote>
+<ul>
+<li><strong>最小权限原则</strong>：算法工程师只能访问自己训练任务的数据集</li>
+<li><strong>数据脱敏后再训练</strong>：训练数据中<strong>所有可识别个人信息的字段全部替换</strong></li>
+<li><strong>操作审计</strong>：所有数据访问行为记录日志，保留 180 天</li>
+<li><strong>双重审批</strong>：导出任何医疗数据需要 PM + 法务双重审批</li>
+</ul>
+</blockquote>
+<p><strong>🔹 第四层：数据销毁（生命周期）</strong></p>
+<blockquote>
+<ul>
+<li><strong>训练完的数据集</strong>：90 天后自动销毁</li>
+<li><strong>客户私有化部署的数据</strong>：客户自主管理，我方不留副本</li>
+<li><strong>模型权重中的隐私</strong>：通过 DP（差分隐私）训练，降低反演攻击风险</li>
+</ul>
+</blockquote>
+<p><strong>法规依据</strong>：</p>
+<blockquote>
+<ul>
+<li>《数据安全法》</li>
+<li>《个人信息保护法》</li>
+<li>《医疗机构病历管理规定》</li>
+<li>《GB/T 35273-2020 个人信息安全规范》</li>
+<li>等保三级（部分客户要求三级甲）</li>
+</ul>
+</blockquote>
+<p><strong>口径关键点</strong>：<br />
+- PM 主导的是<strong>流程 + 审批 + 审计</strong>——不是技术实现<br />
+- 强调"四层防护"——比说"我们数据脱敏了"更可信<br />
+- 主动提法规名——面试官会觉得你懂合规</p>
+<p><strong>追问预案</strong>：<br />
+- "差分隐私具体怎么做的？"→ "在梯度上加噪声，ε 控制在 3 以内，超过会导致模型精度掉点"<br />
+- "如果发生数据泄露怎么办？"→ "24 小时内上报网信办 + 通知用户 + 启动应急响应预案"<br />
+- "客户私有化部署的数据你们能看到吗？"→ "看不到，部署包只含模型权重，不含任何训练数据"</p>
+<hr />
+<h3 id="q11">Q11：等保三级怎么过的？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>等保三级是政企客户的硬门槛，我们当时分了<strong>五个域</strong>整改：</p>
+<table>
+<thead>
+<tr>
+<th>域</th>
+<th>关键措施</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>安全通信网络</strong></td>
+<td>全站 HTTPS、WAF、流量清洗</td>
+</tr>
+<tr>
+<td><strong>安全区域边界</strong></td>
+<td>DMZ 区隔离、API 网关、IP 白名单</td>
+</tr>
+<tr>
+<td><strong>安全计算环境</strong></td>
+<td>主机入侵检测、数据库审计、漏洞扫描</td>
+</tr>
+<tr>
+<td><strong>安全管理中心</strong></td>
+<td>集中日志平台（ELK）、SOC 安全运营中心</td>
+</tr>
+<tr>
+<td><strong>安全管理制度</strong></td>
+<td>PM + 法务联合制定、年度评审、应急演练</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PM 在其中的角色</strong>：<br />
+- 牵头<strong>安全管理制度</strong>编写（30+ 份文档）<br />
+- 协调<strong>第三方测评机构</strong>进场（一般 2-3 个月）<br />
+- 跟进<strong>整改项落地</strong>（测评后会有整改要求）<br />
+- 维护<strong>年度复测</strong>节奏（等保三级每年复测一次）</p>
+</blockquote>
+<p><strong>口径关键点</strong>：<br />
+- PM 不写技术整改方案——PM 负责<strong>管理制度的文档化和流程化</strong><br />
+- 强调"30+ 份文档"——等保三级的合规文档量级<br />
+- 提"第三方测评"——显得你走过完整流程</p>
+<hr />
+<h2 id="_6">第五部分：工程化与国产化类问题</h2>
+<h3 id="q12">Q12：国产化适配怎么做的？（信创 / 昇腾 / 海光）</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>医疗 B 端客户（尤其区县级卫健委、国资体检中心）<strong>必须走信创</strong>，这是硬门槛。我们当时做了<strong>两套国产化方案</strong>：</p>
+</blockquote>
+<p><strong>🔹 方案 A：华为昇腾 910B（主力方案）</strong></p>
+<blockquote>
+<ul>
+<li><strong>硬件</strong>：昇腾 910B 64G（4 卡或 8 卡）</li>
+<li><strong>软件栈</strong>：CANN 7.0 + MindSpore + torch_npu</li>
+<li><strong>模型迁移</strong>：从 NVIDIA CUDA 迁移到 CANN，主要工作是算子适配和性能调优</li>
+<li><strong>精度损失</strong>：FP16 → FP16，<strong>精度损失 &lt; 0.5%</strong></li>
+<li><strong>性能差距</strong>：相比 A100 80G，<strong>推理速度慢 15-20%</strong>（通过量化 + 算子优化补偿）</li>
+</ul>
+</blockquote>
+<p><strong>🔹 方案 B：海光 DCU / 寒武纪 MLU（备选方案）</strong></p>
+<blockquote>
+<ul>
+<li><strong>海光 DCU Z100</strong>：兼容 ROCm 生态，PyTorch 迁移成本低</li>
+<li><strong>寒武纪 MLU370</strong>：用寒武纪自己的 BangC 算子库，迁移成本高</li>
+<li>选型原则：<strong>哪家更贴近客户已有 IT 栈就用哪家</strong></li>
+</ul>
+</blockquote>
+<p><strong>适配过程中的坑</strong>：</p>
+<blockquote>
+<ol>
+<li><strong>算子缺失</strong>：Qwen2-VL 的某些自定义算子（动态分辨率切分）在昇腾上没现成实现，要自己写 CANN 算子</li>
+<li><strong>精度对齐</strong>：FP16 在某些算子上和 NVIDIA 结果有 1-2% 差距，需要逐层对齐</li>
+<li><strong>性能调优</strong>：昇腾的图编译（Ascend Graph Engine）调优需要重写部分算子融合逻辑</li>
+<li><strong>驱动版本</strong>：不同客户现场的驱动版本差异大，需要做<strong>兼容性测试矩阵</strong></li>
+</ol>
+</blockquote>
+<p><strong>PM 在国产化适配中的角色</strong>：</p>
+<blockquote>
+<ul>
+<li><strong>不是写代码</strong>——算法工程师负责算子迁移</li>
+<li><strong>PM 负责</strong>：</li>
+<li>客户需求调研（客户已有的 IT 栈、芯片采购清单）</li>
+<li>选型决策（昇腾 vs 海光 vs 寒武纪）</li>
+<li>项目排期（迁移周期 2-3 个月）</li>
+<li>客户验收（精度 + 性能 + 稳定性）</li>
+</ul>
+</blockquote>
+<p><strong>为什么必须做国产化？</strong></p>
+<blockquote>
+<ol>
+<li><strong>政策强制</strong>：卫健委、医保局、医院的信息化项目 100% 要求信创</li>
+<li><strong>客户画像</strong>：区县级卫健委、地方医院大多是国资背景，采购清单限定国产芯片</li>
+<li><strong>数据出境管控</strong>：医疗数据不能出境，必须跑在国产芯片上</li>
+<li><strong>长期成本</strong>：NVIDIA 芯片供应链不稳定，国产芯片有国家补贴</li>
+</ol>
+</blockquote>
+<p><strong>口径关键点</strong>：<br />
+- PM 主导的是<strong>选型 + 排期 + 客户对接</strong>——不是写算子<br />
+- 强调"客户已有 IT 栈"——信创不是"用最好的是哪个"，而是"客户有什么就适配什么"<br />
+- 主动提华为/海光/寒武纪三个名字——显得真做过<br />
+- 主动提"算子缺失"等具体坑——避免被追问"具体怎么迁移的"</p>
+<p><strong>追问预案</strong>：<br />
+- "昇腾 910B 一张卡多少钱？"→ "商用 8 万左右，4 卡服务器整机 50-60 万"<br />
+- "为什么不选寒武纪？"→ "生态成熟度低，BangC 算子库覆盖不全，迁移成本高"<br />
+- "客户不接受国产化怎么办？"→ "这种情况基本不存在——信创是采购硬门槛，不接受就丢标"</p>
+<hr />
+<h2 id="_7">第六部分：项目复盘类问题</h2>
+<h3 id="q13pm">Q13：怎么和院士团队合作的？PM 在其中起什么作用？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>PM 在这个项目里其实是<strong>"医学专家与算法工程师的翻译官"</strong>：</p>
+<ul>
+<li><strong>前期</strong>：把院士团队的医学标准翻译成"机器可理解的标注规范"</li>
+<li><strong>中期</strong>：组织院士团队做 SFT 数据的标注质量审核，每批数据上线前都要过院士审</li>
+<li><strong>后期</strong>：把模型输出的 Badcase 翻译成"算法工程师能理解的优化方向"</li>
+</ul>
+<p><strong>这个项目最深的体会是：医疗 AI 的 PM 必须懂医学基本逻辑</strong>——不需要会看病，但要懂"为什么医生要这样问诊""诊断依据是什么"。</p>
+</blockquote>
+<p><strong>具体动作</strong>：</p>
+<blockquote>
+<ul>
+<li><strong>每月一次院士碰头会</strong>：汇报模型进展、收集医学反馈</li>
+<li><strong>每周一次医生评测小组</strong>：拉 50 个真实病例盲评</li>
+<li><strong>每日 Badcase 同步</strong>：医生发现的错误 24 小时内同步给算法工程师</li>
+</ul>
+</blockquote>
+<hr />
+<h3 id="q14">Q14：模型部署在哪？推理成本怎么控？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p>两条线：</p>
+<p><strong>云端 API 模式</strong>：用 Qwen2.5-VL-72B 高精度版本，给 B 端高净值客户用，按 token 计费<br />
+<strong>私有化部署模式</strong>：7B 模型 + 量化（GPTQ/INT4）跑在客户自己的服务器上，一次性授权 + 年费</p>
+<p>推理成本主要靠<strong>量化 + 缓存 + 检索增强</strong>压下来——高频医学问题走缓存，复杂问题才走全量推理。</p>
+</blockquote>
+<p><strong>成本明细表</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>7B 方案</th>
+<th>14B 方案</th>
+<th>72B 方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练算力</td>
+<td>8×A100 × 1周 = ¥5万</td>
+<td>8×A100 × 2周 = ¥10万</td>
+<td>32×A100 × 4周 = ¥80万</td>
+</tr>
+<tr>
+<td>推理硬件</td>
+<td>1×A100 80G = ¥20万</td>
+<td>2×A100 80G = ¥40万</td>
+<td>8×A100 80G = ¥160万</td>
+</tr>
+<tr>
+<td>电费/年</td>
+<td>¥0.5万</td>
+<td>¥1万</td>
+<td>¥4万</td>
+</tr>
+<tr>
+<td>客户售价</td>
+<td>一次性 ¥30万 + 年费</td>
+<td>一次性 ¥50万 + 年费</td>
+<td>API 按 token ¥0.1/千</td>
+</tr>
+<tr>
+<td><strong>毛利率</strong></td>
+<td><strong>70%</strong></td>
+<td><strong>60%</strong></td>
+<td><strong>30%</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：<strong>7B 方案毛利率最高、部署最广、迭代最快</strong>——这是 90% 医疗 B 端 AI 公司的共同选择。</p>
+<hr />
+<h3 id="q15">Q15：你在这个项目里最难的决策是什么？</h3>
+<p><strong>参考回答：</strong></p>
+<blockquote>
+<p><strong>"模型能力边界"决策</strong>——什么病模型能看、什么病必须转人工。</p>
+<p>我们设了<strong>三条红线</strong>：<br />
+1. <strong>急症不接</strong>（关键词触发强制就医）<br />
+2. <strong>罕见病不接</strong>（知识图谱覆盖度不够）<br />
+3. <strong>儿童/孕妇/老人特殊人群不接</strong>（安全风险高）</p>
+<p>这三条红线让我和医学团队吵了两个月——医生觉得"我能看为什么模型不能看"，我坚持"宁可漏诊不能误诊"。最后医学总监拍板支持了我这个保守策略。</p>
+<p>这个决策直接影响了产品的<strong>商业定位</strong>——我们最终定位是"<strong>预问诊 + 健康咨询</strong>"，不是"<strong>在线问诊</strong>"。</p>
+</blockquote>
+<p><strong>为什么说这个决策难？</strong></p>
+<blockquote>
+<ol>
+<li><strong>商业损失</strong>：砍掉 30% 的潜在用户（特殊人群是高 ARPU 用户）</li>
+<li><strong>团队分歧</strong>：医学团队不理解为什么不让模型"试试看"</li>
+<li><strong>合规风险</strong>：如果出事故，PM 是第一责任人</li>
+<li><strong>长期价值</strong>：保守策略反而让产品口碑更好，<strong>上线后零医疗事故</strong></li>
+</ol>
+</blockquote>
+<p><strong>口径关键点</strong>：<br />
+- 这个故事体现 PM 的<strong>商业 + 合规 + 用户体验</strong>三维平衡能力<br />
+- "宁漏勿误"是医疗 AI 的金科玉律<br />
+- 强调"零医疗事故"——可量化的成果</p>
+<hr />
+<h2 id="_8">第七部分：避坑清单</h2>
+<h3 id="_9">❌ 不要说的（触发即减分）</h3>
+<table>
+<thead>
+<tr>
+<th>雷区</th>
+<th>替代说法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"我们是自研的 XX 亿参数大模型"</td>
+<td>"基于开源基座（Qwen2-VL）微调的垂直模型"</td>
+</tr>
+<tr>
+<td>"准确率 95% 以上"</td>
+<td>"院士团队盲评 80 分通过，85% 是稳定商用值"</td>
+</tr>
+<tr>
+<td>"我亲自写了 XX 行训练代码"</td>
+<td>"PM 主导评测体系、Prompt 策略、Badcase 分析；算法工程师负责训练实现"</td>
+</tr>
+<tr>
+<td>"我们用 GPT-4 做底座"</td>
+<td>"我们走私有化，100% 开源基座"</td>
+</tr>
+<tr>
+<td>"我们接了医院 HIS 系统"</td>
+<td>"和体检中心合作，提供预问诊和报告解读服务"</td>
+</tr>
+<tr>
+<td>"我是项目负责人"</td>
+<td>"我主导产品设计和评测体系，算法负责人是 X"</td>
+</tr>
+<tr>
+<td>"我们做了 100 万条数据"</td>
+<td>"院士团队 6 套标准 + 12 万条脱敏问诊对话 + 临床指南"</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">✅ 要强调的（加分项）</h3>
+<ol>
+<li><strong>PM 视角的主导动作</strong>：评测体系、Prompt 策略、Badcase 分析、需求边界</li>
+<li><strong>算法工程师的边界</strong>：负责训练实现和模型调优</li>
+<li><strong>院士团队的边界</strong>：负责医学专业度审核和数据标注</li>
+<li><strong>核心贡献量化</strong>：从 60 分做到 85 分，而不是从 0 到 1</li>
+<li><strong>商业价值</strong>：30+ 体检中心客户、多项荣誉、零医疗事故</li>
+<li><strong>合规意识</strong>：等保三级、信创适配、数据脱敏、医疗器械备案</li>
+</ol>
+<hr />
+<h2 id="30">第八部分：高频追问 30 秒速答卡（背熟）</h2>
+<table>
+<thead>
+<tr>
+<th>追问</th>
+<th>30 秒答案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"多少 B？"</td>
+<td>7B 量化版为主，云端 14B/72B 备选</td>
+</tr>
+<tr>
+<td>"怎么训练的？"</td>
+<td>LoRA + 全量微调，8×A100 训练 3 周</td>
+</tr>
+<tr>
+<td>"怎么调试的？"</td>
+<td>指标 + Prompt + 人工盲评三层闭环</td>
+</tr>
+<tr>
+<td>"Prompt 怎么写？"</td>
+<td>角色 + 知识边界 + 推理链 + 安全约束四段式</td>
+</tr>
+<tr>
+<td>"怎么解决幻觉？"</td>
+<td>Prompt 引用 + RAG 检索 + 后处理规则三道防线</td>
+</tr>
+<tr>
+<td>"多模态怎么融合？"</td>
+<td>文本/图片端到端，语音走 ASR 转文本</td>
+</tr>
+<tr>
+<td>"数据怎么脱敏？"</td>
+<td>姓名/身份证/手机号打码 + TLS + 权限分级 + 90 天销毁</td>
+</tr>
+<tr>
+<td>"国产化怎么做？"</td>
+<td>昇腾 910B 主力方案 + 海光/寒武纪备选</td>
+</tr>
+<tr>
+<td>"等保三级过了吗？"</td>
+<td>过了，PM 牵头 30+ 份合规文档</td>
+</tr>
+<tr>
+<td>"成本怎么算？"</td>
+<td>7B 方案毛利率 70%，14B 是 60%，72B 是 30%</td>
+</tr>
+<tr>
+<td>"最难决策？"</td>
+<td>模型能力边界——急症/罕见病/特殊人群不接</td>
+</tr>
+<tr>
+<td>"院士怎么合作的？"</td>
+<td>PM 当翻译官，把医学标准翻译成标注规范</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_11">📎 相关文档链接</h2>
+<ul>
+<li>《简历_壹生检康_高级AI产品经理_20260719.md》——核心简历</li>
+<li>《面试话术.md》——通用面试自我介绍 + HR 面速记卡</li>
+<li>《银发管家产品概念方案.md》——AI Agent 概念设计</li>
+<li>《银发管家产品PRD.md》——AI Agent 详细 PRD</li>
+<li>《银发管家MVP路线图.md》——AI Agent 落地路径</li>
+</ul>
+<hr />
+<p><strong>下一步行动</strong>：<br />
+- [ ] 找一次模拟面试，找朋友/家人按 Q1-Q15 顺序追问<br />
+- [ ] 对每个答案录音回放，找"口头禅"和"含糊点"<br />
+- [ ] 准备 2-3 个"你还有什么想问的"反问，体现产品思维</p>
+    <div class="footer">
+      📂 本页面由仲超独立产出 · 2026-08-20<br>
+      🏠 <a href="index.html">返回作品集首页</a> · 💼 定向岗位：墨帝教育·判判事业部
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课堂AI学习伴侣 · 可点击原型（初中数学）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { font-family:-apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif; background:#eef1f6; color:#1a1a1a; padding:24px 16px 60px; }
+  .title-bar { text-align:center; margin-bottom:16px; }
+  .title-bar h1 { font-size:20px; color:#1f2d3d; }
+  .title-bar p { font-size:13px; color:#8a94a6; margin-top:4px; }
+
+  /* mode toggle */
+  .mode-bar { text-align:center; margin-bottom:22px; }
+  .mode-btn { display:inline-block; font-size:13px; font-weight:600; padding:8px 18px; border:1px solid #cdd8e8; background:#fff; color:#5b6b82; cursor:pointer; transition:.15s; }
+  .mode-btn:first-child { border-radius:20px 0 0 20px; }
+  .mode-btn:last-child { border-radius:0 20px 20px 0; border-left:none; }
+  .mode-btn.on { background:#1677ff; color:#fff; border-color:#1677ff; }
+
+  .stage { display:flex; flex-wrap:wrap; gap:28px; justify-content:center; align-items:flex-start; }
+  /* phone frame */
+  .phone { width:340px; background:#fff; border-radius:28px; box-shadow:0 12px 40px rgba(31,45,61,.16); overflow:hidden; border:1px solid #e2e7f0; }
+  .screen-label { text-align:center; font-size:12px; color:#5b6b82; margin-top:10px; font-weight:600; }
+  .scr-wrap { transition:opacity .18s; }
+
+  /* dingtalk-style header */
+  .nav { background:linear-gradient(135deg,#1677ff,#0e5fd8); color:#fff; padding:14px 16px; display:flex; align-items:center; gap:10px; }
+  .nav .back { font-size:20px; opacity:.95; cursor:pointer; line-height:1; }
+  .nav .nav-title { font-size:16px; font-weight:600; flex:1; }
+  .nav .nav-sub { font-size:11px; opacity:.85; }
+  .body { padding:14px 16px 20px; min-height:560px; }
+  .status-tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .tag-done { background:#e6f7ed; color:#12a150; }
+  .tag-proc { background:#fff4e6; color:#e8890c; }
+  /* card */
+  .card { border:1px solid #eef1f6; border-radius:14px; padding:13px 14px; margin-bottom:12px; background:#fff; box-shadow:0 2px 8px rgba(31,45,61,.04); cursor:pointer; transition:.15s; }
+  .card:active { transform:scale(.98); }
+  .card.locked { cursor:not-allowed; opacity:.85; }
+  .card-row { display:flex; justify-content:space-between; align-items:center; }
+  .card-title { font-size:15px; font-weight:600; color:#1f2d3d; }
+  .card-meta { font-size:12px; color:#8a94a6; margin-top:5px; }
+  .arrow { color:#c2cad6; font-size:16px; }
+  .section-h { font-size:13px; font-weight:700; color:#1677ff; margin:16px 0 8px; display:flex; align-items:center; gap:6px; }
+  .section-h::before { content:""; width:3px; height:14px; background:#1677ff; border-radius:2px; }
+  .kv { font-size:13px; line-height:1.7; color:#3a4658; }
+  .kv b { color:#1f2d3d; }
+  .pill { display:inline-block; font-size:11px; background:#eef4ff; color:#1677ff; padding:3px 9px; border-radius:12px; margin:3px 4px 3px 0; }
+  .diff-box { background:#fff8f0; border:1px solid #ffe4c2; border-radius:10px; padding:10px 12px; margin:8px 0; }
+  .diff-box .dt { font-size:12px; font-weight:700; color:#e8890c; margin-bottom:4px; }
+  .diff-box .dd { font-size:12px; color:#7a6a52; line-height:1.6; }
+  .sug { background:#f5f9ff; border-left:3px solid #1677ff; padding:9px 12px; border-radius:0 8px 8px 0; margin-bottom:8px; font-size:13px; color:#2a3a52; line-height:1.55; }
+  .sug .n { color:#1677ff; font-weight:700; margin-right:5px; }
+  .btn { display:block; width:100%; text-align:center; background:#1677ff; color:#fff; font-size:15px; font-weight:600; padding:12px; border-radius:12px; margin-top:16px; border:none; cursor:pointer; }
+  .btn:active { background:#0e5fd8; }
+  .link-row { border-top:1px solid #eef1f6; padding:10px 14px; font-size:12px; color:#1677ff; cursor:pointer; }
+  .note-h1 { font-size:18px; font-weight:700; color:#1f2d3d; margin-bottom:4px; }
+  .note-formula { background:#f7f9fc; border:1px dashed #cdd8e8; border-radius:8px; padding:8px 12px; font-size:14px; color:#1f2d3d; text-align:center; margin:8px 0; font-family:"Times New Roman",serif; }
+  .step { font-size:13px; color:#3a4658; line-height:1.75; padding-left:18px; position:relative; margin-bottom:3px; }
+  .step::before { content:attr(data-n); position:absolute; left:0; top:1px; width:15px; height:15px; background:#1677ff; color:#fff; border-radius:50%; font-size:10px; text-align:center; line-height:15px; font-weight:700; }
+  .hl { background:#fff3cd; padding:0 3px; border-radius:3px; }
+  .task-item { border:1px solid #eef1f6; border-radius:10px; padding:11px 12px; margin-bottom:9px; display:flex; align-items:flex-start; gap:10px; cursor:pointer; }
+  .chk { width:19px; height:19px; border:2px solid #1677ff; border-radius:5px; flex-shrink:0; margin-top:1px; }
+  .chk.done { background:#1677ff; position:relative; }
+  .chk.done::after { content:"✓"; color:#fff; font-size:12px; position:absolute; left:3px; top:-1px; }
+  .task-txt { font-size:13px; color:#3a4658; line-height:1.5; }
+  .task-txt.done { text-decoration:line-through; color:#a8b2c1; }
+  .level-badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:10px; font-weight:700; margin-bottom:10px; }
+  .lv-basic { background:#e6f7ed; color:#12a150; }
+  .lv-adv { background:#fdeaf4; color:#d6337f; }
+  .cover-bar { height:8px; background:#eef1f6; border-radius:4px; overflow:hidden; margin:6px 0; }
+  .cover-fill { height:100%; background:linear-gradient(90deg,#12a150,#3fd07a); }
+  .foot-note { text-align:center; font-size:11px; color:#a8b2c1; margin-top:28px; }
+
+  /* ===== demo mode ===== */
+  body.demo .stage { display:block; }
+  body.demo .scr-wrap { display:none; margin:0 auto; }
+  body.demo .scr-wrap.active { display:block; }
+  body.demo .screen-label { display:none; }
+  /* bottom role tabs (demo only) */
+  .role-tabs { display:none; position:fixed; left:50%; transform:translateX(-50%); bottom:18px; background:#fff; border:1px solid #e2e7f0; border-radius:24px; box-shadow:0 8px 28px rgba(31,45,61,.16); padding:6px; gap:4px; z-index:50; }
+  body.demo .role-tabs { display:flex; }
+  .role-tab { font-size:13px; font-weight:600; color:#5b6b82; padding:8px 16px; border-radius:18px; cursor:pointer; }
+  .role-tab.on { background:#1677ff; color:#fff; }
+  .demo-hint { display:none; text-align:center; font-size:12px; color:#8a94a6; margin-bottom:16px; }
+  body.demo .demo-hint { display:block; }
+  /* toast */
+  .toast { position:fixed; left:50%; top:40%; transform:translate(-50%,-50%) scale(.9); background:rgba(31,45,61,.94); color:#fff; font-size:14px; padding:14px 22px; border-radius:12px; opacity:0; pointer-events:none; transition:.22s; z-index:100; max-width:280px; text-align:center; line-height:1.5; }
+  .toast.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+</style>
+</head>
+<body>
+  <div class="title-bar">
+    <h1>课堂 AI 学习伴侣 · 可点击原型</h1>
+    <p>初中数学 · 一元一次方程 &nbsp;|&nbsp; 教师端(钉钉) + 学生端 + 家长端 &nbsp;|&nbsp; v1.1 交互演示</p>
+  </div>
+
+  <div class="mode-bar">
+    <span class="mode-btn on" id="mode-grid" onclick="setMode('grid')">🗂 全览模式</span>
+    <span class="mode-btn" id="mode-demo" onclick="setMode('demo')">▶ 点击演示</span>
+  </div>
+
+  <div class="demo-hint">👆 点击卡片 / 按钮 / 顶部返回箭头，体验真实跳转 · 底部切换三个角色入口</div>
+
+  <div class="stage">
+
+    <!-- P1 课堂列表 -->
+    <div class="scr-wrap" id="p1">
+    <div class="phone">
+      <div class="nav"><span class="nav-title">我的课堂</span><span class="nav-sub">初二3班</span></div>
+      <div class="body">
+        <div class="card" onclick="go('p2')">
+          <div class="card-row"><span class="card-title">一元一次方程</span><span class="status-tag tag-done">已生成</span></div>
+          <div class="card-meta">今天 08:00 · 45分钟 · 数学</div>
+          <div class="card-meta" style="margin-top:6px;color:#1677ff;">点击查看上课反馈 →</div>
+        </div>
+        <div class="card locked" onclick="toast('⏳ 内容生成中，约需 30 分钟')">
+          <div class="card-row"><span class="card-title">整式的加减</span><span class="status-tag tag-proc">处理中</span></div>
+          <div class="card-meta">昨天 10:00 · 42分钟 · 数学</div>
+          <div class="card-meta" style="margin-top:6px;color:#e8890c;">内容生成中，约需30分钟</div>
+        </div>
+        <div class="card locked" onclick="toast('📄 演示版仅开放「一元一次方程」一课')">
+          <div class="card-row"><span class="card-title">有理数的乘方</span><span class="status-tag tag-done">已生成</span></div>
+          <div class="card-meta">07-21 08:00 · 45分钟 · 数学</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">P1 课堂列表（教师端·钉钉）</div>
+    </div>
+
+    <!-- P2 教师反馈 -->
+    <div class="scr-wrap" id="p2">
+    <div class="phone">
+      <div class="nav"><span class="back" onclick="go('p1')">‹</span><span class="nav-title">上课反馈</span><span class="nav-sub">一元一次方程</span></div>
+      <div class="body">
+        <div class="section-h">知识点覆盖度</div>
+        <div class="kv"><b>4/5</b> 已覆盖计划知识点</div>
+        <div class="cover-bar"><div class="cover-fill" style="width:80%"></div></div>
+        <div class="kv" style="color:#e8890c;">未覆盖：<b>实际应用题</b></div>
+
+        <div class="section-h">课堂节奏</div>
+        <div class="kv">整体偏快，例题讲解环节略仓促。</div>
+
+        <div class="section-h">师生互动</div>
+        <div class="kv">提问 <b>6</b> 次，学生应答活跃，讨论集中在移项环节。</div>
+
+        <div class="section-h">疑似难点</div>
+        <div class="diff-box">
+          <div class="dt">⚠ 移项要变号</div>
+          <div class="dd">该环节重复讲解 2 次，学生追问较多，建议下节课强化。</div>
+        </div>
+
+        <div class="section-h">改进建议</div>
+        <div class="sug"><span class="n">1</span>移项环节增加 1 道正负号对比练习</div>
+        <div class="sug"><span class="n">2</span>本堂遗漏的"实际应用题"下节课补充</div>
+        <div class="sug"><span class="n">3</span>例题讲解放慢，留 2 分钟给学生自主计算</div>
+
+        <button class="btn" onclick="go('p3')">一键分发（笔记给学生 · 通知家长）</button>
+      </div>
+    </div>
+    <div class="screen-label">P2 教师反馈报告（教师端·钉钉）</div>
+    </div>
+
+    <!-- P3 教师笔记预览（只读） -->
+    <div class="scr-wrap" id="p3">
+    <div class="phone">
+      <div class="nav"><span class="back" onclick="go('p2')">‹</span><span class="nav-title">笔记预览</span><span class="nav-sub">教师视角·只读</span></div>
+      <div class="body">
+        <div style="background:#eef4ff;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#1677ff;">👁 只读预览 —— 与学生端笔记同源，分发前可先确认内容</div>
+        <div class="note-h1">一元一次方程</div>
+        <div class="kv" style="color:#8a94a6;font-size:12px;">初二3班 · 今天 08:00 · 系统自动生成</div>
+
+        <div class="section-h">核心知识点</div>
+        <div class="kv"><b>定义：</b>只含一个未知数、未知数次数为1的方程。</div>
+        <div class="note-formula">ax + b = 0 &nbsp;(a ≠ 0)</div>
+        <span class="pill">移项</span><span class="pill">合并同类项</span><span class="pill">系数化为1</span>
+
+        <div class="section-h">例题与解法</div>
+        <div class="kv" style="margin-bottom:6px;"><b>解方程：</b>2x + 3 = 7</div>
+        <div class="step" data-n="1">移项：2x = 7 − 3 <span class="hl">（移项要变号）</span></div>
+        <div class="step" data-n="2">合并：2x = 4</div>
+        <div class="step" data-n="3">系数化为1：x = 2</div>
+
+        <div class="section-h">重点 · 难点</div>
+        <div class="diff-box">
+          <div class="dt">⚠ 难点：移项变号</div>
+          <div class="dd">"把 +3 移到等号右边要变成 −3" —— 老师原话，本堂重点。</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button class="btn" style="background:#eef1f6;color:#5b6b82;margin-top:0;" onclick="go('p2')">返回报告</button>
+          <button class="btn" style="margin-top:0;" onclick="distribute()">确认并分发</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">P3 笔记预览（教师端 · 分发前确认）</div>
+    </div>
+
+    <!-- P4 学生笔记 -->
+    <div class="scr-wrap" id="p4">
+    <div class="phone">
+      <div class="nav"><span class="back" onclick="go('p1')">‹</span><span class="nav-title">课堂笔记</span><span class="nav-sub">数学</span></div>
+      <div class="body">
+        <div class="note-h1">一元一次方程</div>
+        <div class="kv" style="color:#8a94a6;font-size:12px;">今天 08:00 自动生成 · 来自课堂录音</div>
+
+        <div class="section-h">核心知识点</div>
+        <div class="kv"><b>定义：</b>只含一个未知数、未知数次数为1的方程。</div>
+        <div class="note-formula">ax + b = 0 &nbsp;(a ≠ 0)</div>
+        <span class="pill">移项</span><span class="pill">合并同类项</span><span class="pill">系数化为1</span>
+
+        <div class="section-h">例题与解法</div>
+        <div class="kv" style="margin-bottom:6px;"><b>解方程：</b>2x + 3 = 7</div>
+        <div class="step" data-n="1">移项：2x = 7 − 3 <span class="hl">（移项要变号）</span></div>
+        <div class="step" data-n="2">合并：2x = 4</div>
+        <div class="step" data-n="3">系数化为1：x = 2</div>
+
+        <div class="section-h">重点 · 难点</div>
+        <div class="diff-box">
+          <div class="dt">⚠ 难点：移项变号</div>
+          <div class="dd">"把 +3 移到等号右边要变成 −3" —— 老师原话，本堂重点。</div>
+        </div>
+
+        <div class="section-h">课后待办</div>
+        <button class="btn" onclick="go('p5')">查看今日复习任务 →</button>
+      </div>
+    </div>
+    <div class="screen-label">P4 课堂笔记（学生端）</div>
+    </div>
+
+    <!-- P5 分层任务（两档并列示意） -->
+    <div class="scr-wrap" id="p5">
+    <div class="phone">
+      <div class="nav"><span class="back" onclick="go('p4')">‹</span><span class="nav-title">今日复习</span><span class="nav-sub">因材施教</span></div>
+      <div class="body">
+        <div class="level-badge lv-basic">基础巩固档</div>
+        <div class="kv" style="font-size:12px;color:#8a94a6;margin-bottom:8px;">依据：数学成绩标签 · 侧重本堂难点</div>
+        <div class="task-item" onclick="toggleChk(this)"><div class="chk done"></div><div class="task-txt done">复习：移项练习 3x+5=14</div></div>
+        <div class="task-item" onclick="toggleChk(this)"><div class="chk"></div><div class="task-txt">移项变号专项 5 题</div></div>
+        <div class="task-item" onclick="toggleChk(this)"><div class="chk"></div><div class="task-txt">对比练习：+号/−号移项各2题</div></div>
+
+        <div class="level-badge lv-adv" style="margin-top:18px;">拔高拓展档</div>
+        <div class="kv" style="font-size:12px;color:#8a94a6;margin-bottom:8px;">同一堂课 · 不同学生看到不同任务</div>
+        <div class="task-item" onclick="toggleChk(this)"><div class="chk"></div><div class="task-txt">多步方程 5(x−1)=2x+7</div></div>
+        <div class="task-item" onclick="toggleChk(this)"><div class="chk"></div><div class="task-txt">应用题：行程问题建方程求解</div></div>
+        <div class="task-item" onclick="toggleChk(this)"><div class="chk"></div><div class="task-txt">思考：含参方程 ax=6 的讨论</div></div>
+      </div>
+    </div>
+    <div class="screen-label">P5 分层复习任务（学生端 · 基础/拔高对比）</div>
+    </div>
+
+    <!-- P6 家长通知（纯展示） -->
+    <div class="scr-wrap" id="p6">
+    <div class="phone">
+      <div class="nav" style="background:linear-gradient(135deg,#12a150,#0e8a44);"><span class="nav-title">工作通知</span><span class="nav-sub">课堂 AI 学习伴侣</span></div>
+      <div class="body" style="background:#f0f2f5;">
+        <div style="text-align:center;font-size:12px;color:#a8b2c1;margin-bottom:14px;">今天 17:30</div>
+
+        <!-- 通知卡片1：课堂摘要 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(31,45,61,.06);margin-bottom:14px;">
+          <div style="background:#12a150;color:#fff;padding:11px 14px;font-size:14px;font-weight:600;">📘 今日课堂摘要</div>
+          <div style="padding:13px 14px;font-size:13px;line-height:1.7;color:#3a4658;">
+            孩子今天数学课学习了 <b>一元一次方程</b>，掌握了移项、合并同类项、系数化为1 三个步骤。课堂表现活跃。<b style="color:#e8890c;">本堂难点：移项要变号</b>，建议今晚重点复习。
+          </div>
+          <div class="link-row" onclick="go('p4')">查看完整笔记 ›</div>
+        </div>
+
+        <!-- 通知卡片2：复习提醒 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(31,45,61,.06);">
+          <div style="background:#1677ff;color:#fff;padding:11px 14px;font-size:14px;font-weight:600;">⏰ 复习提醒</div>
+          <div style="padding:13px 14px;font-size:13px;line-height:1.7;color:#3a4658;">
+            今晚 <b>19:00-19:20</b> 提醒孩子完成今日数学复习任务（移项专项练习）。坚持每日复习，养成好习惯 💪
+          </div>
+        </div>
+
+        <div style="text-align:center;font-size:11px;color:#c2cad6;margin-top:18px;">纯通知 · 家长无需操作</div>
+      </div>
+    </div>
+    <div class="screen-label">P6 家长通知（家长端 · 钉钉工作通知·纯展示）</div>
+    </div>
+
+  </div>
+
+  <!-- 底部角色入口（仅演示模式） -->
+  <div class="role-tabs">
+    <span class="role-tab on" data-role="teacher" onclick="go('p1')">👩‍🏫 教师端</span>
+    <span class="role-tab" data-role="student" onclick="go('p4')">🎒 学生端</span>
+    <span class="role-tab" data-role="parent" onclick="go('p6')">👨‍👩‍👧 家长端</span>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="foot-note">课堂 AI 学习伴侣 · 可点击高保真原型 · 仅演示用 · 2026-07-23</div>
+
+<script>
+  // 各屏所属角色，用于高亮底部 tab
+  var ROLE = { p1:'teacher', p2:'teacher', p3:'teacher', p4:'student', p5:'student', p6:'parent' };
+
+  function setMode(m){
+    var demo = (m === 'demo');
+    document.body.classList.toggle('demo', demo);
+    document.getElementById('mode-demo').classList.toggle('on', demo);
+    document.getElementById('mode-grid').classList.toggle('on', !demo);
+    if (demo) go('p1');
+    window.scrollTo(0, 0);
+  }
+
+  function go(id){
+    if (!document.body.classList.contains('demo')) return; // 全览模式不跳转
+    document.querySelectorAll('.scr-wrap').forEach(function(e){ e.classList.remove('active'); });
+    var el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    // 高亮角色 tab
+    var role = ROLE[id];
+    document.querySelectorAll('.role-tab').forEach(function(t){
+      t.classList.toggle('on', t.getAttribute('data-role') === role);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function distribute(){
+    toast('✅ 笔记已分发给学生<br>家长已收到工作通知');
+    setTimeout(function(){ go('p6'); }, 1100);
+  }
+
+  function toggleChk(item){
+    if (!document.body.classList.contains('demo')) return;
+    var chk = item.querySelector('.chk');
+    var txt = item.querySelector('.task-txt');
+    chk.classList.toggle('done');
+    txt.classList.toggle('done');
+  }
+
+  var _t;
+  function toast(msg){
+    var el = document.getElementById('toast');
+    el.innerHTML = msg;
+    el.classList.add('show');
+    clearTimeout(_t);
+    _t = setTimeout(function(){ el.classList.remove('show'); }, 1800);
+  }
+</script>
+</body>
+</html>

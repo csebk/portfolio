@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K12 课堂AI PRD | 仲超产品经理作品集</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <h1>仲超 · 产品经理</h1>
+    <div class="subtitle">9年PM · 主攻AI产品<br>4年明品医学AI实战</div>
+    
+<div class="contact">
+  <strong>📞 联系方式</strong>
+  手机：187-1787-9424<br>
+  邮箱：chao358@126.com<br>
+  微信：仲超<br>
+  所在地：上海·昆山花桥
+</div>
+
+    
+<nav>
+  <h3>📌 作品集首页</h3>
+  <ul>
+    <li><a href="index.html" class="section">墨帝教育 · 判判AI定向版</a></li>
+  </ul>
+
+  <h3>🏥 主牌 · 医疗AI 实战</h3>
+  <ul>
+    <li><a href="medical-cases.html">医疗AI 3 案例集</a></li>
+    <li><a href="yinfa-prd.html">银发管家 PRD（已上线 demo）</a></li>
+    <li><a href="yanglao-prd.html">养老AI助手 PRD</a></li>
+    <li><a href="shanzhi-qa.html">善智星语 Q&A（30+问答）</a></li>
+  </ul>
+
+  <h3>📚 副牌 · 教育AI 探索</h3>
+  <ul>
+    <li><a href="k12-prd.html">K12 课堂AI PRD</a></li>
+    <li><a href="k12-prototype.html">K12 课堂AI 原型</a></li>
+    <li><a href="k12-competitive.html">K12 竞品分析</a></li>
+  </ul>
+</nav>
+
+  </aside>
+  <main>
+    <h1 id="k12-ai-prd">K12 课堂 AI 学习习惯培养产品 · PRD（初中数学 · 可交付开发测试版）</h1>
+<h2 id="0">0. 文档信息</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>产品名称</td>
+<td>（暂定）课堂 AI 学习伴侣 / ClassMate AI</td>
+</tr>
+<tr>
+<td>文档版本</td>
+<td><strong>v1.1（市场校准版 · 聚焦初中数学）</strong></td>
+</tr>
+<tr>
+<td>撰写视角</td>
+<td>产品经理</td>
+</tr>
+<tr>
+<td>日期</td>
+<td>2026-07-23</td>
+</tr>
+<tr>
+<td>阶段</td>
+<td>0→1，期望 3 个月内首版上线</td>
+</tr>
+<tr>
+<td>关键合作方</td>
+<td>钉钉（录音硬件 + 教师端载体）</td>
+</tr>
+<tr>
+<td>Demo 学科</td>
+<td><strong>初中数学</strong>（如：一元一次方程、全等三角形）</td>
+</tr>
+<tr>
+<td>Demo 主线</td>
+<td><strong>数学课堂录音 → 步骤化学生笔记（打穿通用工具的垂直空白）</strong>；教师反馈与分层做轻量演示</td>
+</tr>
+<tr>
+<td>差异化一句话</td>
+<td><strong>一段初中数学课堂录音，让老师 0 负担拿到循证教学反馈、让学生拿到公式步骤化的分层笔记</strong></td>
+</tr>
+<tr>
+<td>交付对象</td>
+<td>研发、测试、UI/交互</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>说明：v1.1 在 v1.0 基础上完成<strong>市场调研 + 竞品分析校准</strong>（详见 §18）：①收窄 Demo 主线到"数学步骤化笔记"这一通用工具做不出的垂直空白；②教师反馈从"评价打分"改为"循证参考 + 教师可修正"，新增溯源/提问分析/时间分配；③分层加可见性与伦理约束（层级只对老师可见）；④诚实界定纯音频的能力边界（不承诺视觉类指标）；⑤补充被竞品验证的高风险点到风险章节。v1.0 已具备的功能规格(FSD)、数据模型、接口契约、页面交互、AI 生成规格、埋点、验收/测试用例、非功能指标全部保留。合规实现 Demo 阶段搁置（§9），北极星指标见 §10。</p>
+</blockquote>
+<hr />
+<h2 id="v02">第一部分 · 产品定义（承接 v0.2，已收敛）</h2>
+<h2 id="1">1. 背景与问题定义</h2>
+<p><strong>背景</strong>：公司在 K12 学校教育方向做 0→1 孵化（同期探索医疗/影视 AIGC/法律，本产品聚焦教育线）。硬件不自研，与钉钉合作，用其课堂录音卡片设备采集课堂数据，直接嵌入学校教学流程。</p>
+<p><strong>核心问题</strong>：<br />
+- 学生：课堂信息转瞬即逝，记笔记=漏听讲；课后不知道预习/复习什么。<br />
+- 教师：面对几十个学生无法即时感知教学效果，反馈滞后。<br />
+- 共性：班级授课制下因材施教难落地。</p>
+<p><strong>产品目标（一句话）</strong>：以课堂录音为数据源，用 AI 降低师生信息处理成本，把"培养良好学习习惯"落成可执行、可量化的日常动作。</p>
+<h2 id="2">2. 定位 / 用户 / 价值（摘要）</h2>
+<ul>
+<li>定位：嵌入 K12 学校教学流程的 AI 教学助手，B端切入（学校/老师），服务 C端（学生/家长）。Demo 聚焦初中数学。</li>
+<li><strong>差异化定位（市场校准后）</strong>：市场已被割裂的单点产品占据——希沃只做教师反馈（重硬件/校端教研）、松鼠/作业帮只做学生分层（不碰课堂）、钉钉A1/通义听悟只做通用录音摘要（不做学科/反馈/分层）。<strong>本产品是唯一把"同一段课堂录音"同时转成①学生分层笔记②教师循证反馈③家长通知的"一鱼三吃"轻量工具</strong>，且死磕初中数学垂直（公式/步骤/知识点热词）+ 老师0操作0硬件改造。详见 §18。</li>
+<li>核心用户：初中数学老师（主）、初中学生（核心）、家长（外围·纯通知）、学校管理者（决策）。</li>
+<li>价值：老师 0 操作拿反馈；学生专心听、课后拿笔记+分层预复习；学校沉淀教学数据资产。</li>
+</ul>
+<h2 id="3-moscow-v11">3. 范围与优先级（MoSCoW · v1.1 市场校准）</h2>
+<blockquote>
+<p>v1.1 调整说明：①Demo 主线收窄——"数学步骤化学生笔记"为唯一必须打穿的深水区（通用工具做不出、纯音频可交付）；教师反馈与分层做轻量演示版，避免三头都浅。②教师反馈剔除视觉类指标（纯音频采不到抬头率/微笑），仅承诺音频可靠产出的维度。③分层"知识点级"明确为 v2 目标，Demo 用成绩标签冷启动的 basic/advanced 仅供老师参考。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>功能</th>
+<th>面向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Must</td>
+<td>课堂录音转写+结构化</td>
+<td>系统</td>
+</tr>
+<tr>
+<td>Must</td>
+<td><strong>学生·数学步骤化笔记生成（Demo 打穿主线）</strong></td>
+<td>学生</td>
+</tr>
+<tr>
+<td>Must</td>
+<td>教师端（钉钉内）查看与分发</td>
+<td>老师</td>
+</tr>
+<tr>
+<td>Should</td>
+<td>老师·上课反馈报告（<strong>循证参考定位·仅音频可得维度</strong>）</td>
+<td>老师</td>
+</tr>
+<tr>
+<td>Should</td>
+<td>分层预习/复习内容（<strong>层级仅老师可见·总分冷启动，知识点级为v2</strong>）</td>
+<td>学生</td>
+</tr>
+<tr>
+<td>Should</td>
+<td>数据合规与权限（⚠️Demo搁置）</td>
+<td>全体</td>
+</tr>
+<tr>
+<td>Could</td>
+<td>家庭通知（摘要+提醒+1条"今日一句"轻建议）</td>
+<td>家长</td>
+</tr>
+<tr>
+<td>Won't本期</td>
+<td>视觉类课堂指标（抬头率/微笑，需多模态硬件）</td>
+<td>老师</td>
+</tr>
+<tr>
+<td>Won't本期</td>
+<td>学生手写/答题 OCR 补录（分层证据增强）</td>
+<td>学生</td>
+</tr>
+<tr>
+<td>Won't本期</td>
+<td>知识点级分层 / 每生独立知识库 / 千人千面</td>
+<td>学生</td>
+</tr>
+<tr>
+<td>Won't本期</td>
+<td>管理者聚合报表（备课组/年级/校级横向对比）</td>
+<td>校管</td>
+</tr>
+<tr>
+<td>Won't本期</td>
+<td>教师端独立化（脱钉钉）</td>
+<td>老师</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-2026-07-23">4. 已收敛决策（2026-07-23）</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>议题</th>
+<th>决策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Demo 学科</td>
+<td>初中数学</td>
+</tr>
+<tr>
+<td>2</td>
+<td>分层数据来源</td>
+<td>学校成绩标签 + 系统建档细化</td>
+</tr>
+<tr>
+<td>3</td>
+<td>家长端</td>
+<td>纯通知（不做交互）</td>
+</tr>
+<tr>
+<td>4</td>
+<td>录音合规</td>
+<td>Demo 搁置，进校前补齐</td>
+</tr>
+<tr>
+<td>5</td>
+<td>教师端独立化</td>
+<td>暂搁置，寄生钉钉</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Demo 主线（v1.1 新增）</strong></td>
+<td><strong>聚焦"数学步骤化学生笔记"打穿，教师反馈+分层做轻量演示</strong>（市场校准：纯录音转笔记无壁垒会被钉钉A1免费覆盖，必须靠数学公式/步骤化/分层做出通用工具给不了的增量；详见§18）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="fsd">第二部分 · 功能规格详述（FSD）</h2>
+<blockquote>
+<p>约定：每个功能给出【触发】【输入】【处理规则】【输出】【边界/异常与降级】。字段命名同 §6 数据模型。</p>
+</blockquote>
+<h2 id="5">5. 系统主链路</h2>
+<pre><code>钉钉录音卡片采集音频
+  → [F1] 音频上传与课堂建档
+  → [F2] ASR 转写
+  → [F3] 结构化理解(分环节/识别数学知识点/捕捉互动)
+      ├→ [F4] 学生课堂笔记生成
+      ├→ [F5] 教师上课反馈生成
+      └→ [F6] 分层预习/复习生成
+  → [F7] 教师端查看与分发
+  → [F8] 家长纯通知
+</code></pre>
+<h3 id="f1">F1 音频上传与课堂建档</h3>
+<ul>
+<li><strong>触发</strong>：一节课结束，录音卡片音频经钉钉侧回传；或教师端手动上传（demo 兜底）。</li>
+<li><strong>输入</strong>：<code>audio_file</code>(音频)、<code>class_id</code>、<code>teacher_id</code>、<code>subject=math</code>、<code>start_time</code>、<code>duration</code>、<code>topic</code>(可选，课题)。</li>
+<li><strong>处理规则</strong>：</li>
+<li>校验音频格式(mp3/wav/m4a)、时长(≥5 分钟才处理，&lt;5 分钟标记 <code>too_short</code>)。</li>
+<li>创建 <code>ClassSession</code> 记录，状态置 <code>uploaded</code>。</li>
+<li>触发异步转写任务。</li>
+<li><strong>输出</strong>：<code>session_id</code> + 状态 <code>uploaded</code>。</li>
+<li><strong>边界/异常</strong>：格式不支持→拒绝并提示；时长过短→<code>too_short</code> 不生成内容；上传失败→可重试 3 次。</li>
+</ul>
+<h3 id="f2-asr">F2 ASR 转写</h3>
+<ul>
+<li><strong>触发</strong>：F1 建档成功后异步调用。</li>
+<li><strong>输入</strong>：<code>session_id</code> + 音频。</li>
+<li><strong>处理规则</strong>：</li>
+<li>调 ASR 服务，输出带时间戳与说话人分离(teacher/student)的转写文本。</li>
+<li>应用<strong>数学学科词库</strong>纠错（如"移项/因式分解/一元一次方程"）。</li>
+<li>写入 <code>Transcript</code>，状态 <code>transcribed</code>；失败置 <code>transcribe_failed</code>。</li>
+<li><strong>输出</strong>：<code>transcript_id</code> + 分段文本(含 timestamp、speaker、text)。</li>
+<li><strong>边界/异常</strong>：识别置信度低于阈值的段落标 <code>low_confidence=true</code>（供人工校准/前端弱化展示）；ASR 超时/失败→重试 2 次仍失败置 <code>transcribe_failed</code>，通知运营。</li>
+</ul>
+<h3 id="f3">F3 结构化理解</h3>
+<ul>
+<li><strong>触发</strong>：F2 成功后。</li>
+<li><strong>输入</strong>：<code>transcript_id</code> 分段文本。</li>
+<li><strong>处理规则</strong>（LLM）：</li>
+<li>切分课堂环节（导入/新授/例题讲解/练习/小结）。</li>
+<li>抽取本堂<strong>数学知识点</strong>列表（含公式/定理/解题方法）。</li>
+<li>识别师生互动（提问/回答/讨论）及<strong>疑似难点</strong>（学生反应弱/反复讲解的环节）。</li>
+<li><strong>输出</strong>：<code>StructuredContent</code>（环节数组、知识点数组、互动数组、难点数组）。</li>
+<li><strong>边界/异常</strong>：转写质量差导致无法抽取→降级为"仅时间轴笔记"，并标 <code>degraded=true</code>。</li>
+</ul>
+<h3 id="f4">F4 学生课堂笔记生成</h3>
+<ul>
+<li><strong>触发</strong>：F3 成功后。</li>
+<li><strong>输入</strong>：<code>StructuredContent</code> + <code>subject=math</code>。</li>
+<li><strong>处理规则</strong>：按数学笔记模板生成（见 §11 AI 规格）；重点/难点标注；例题解法步骤化；公式规范排版(LaTeX/图片)。</li>
+<li><strong>输出</strong>：<code>Note</code>（markdown 结构化正文 + 知识点标签 + 重点/难点 flag）。</li>
+<li><strong>边界/异常</strong>：内容为空→不生成，标 <code>no_content</code>；生成超时→重试1次。</li>
+</ul>
+<h3 id="f5-v11">F5 教师上课反馈生成（v1.1 循证参考定位）</h3>
+<ul>
+<li><strong>触发</strong>：F3 成功后（与 F4 并行）。</li>
+<li><strong>输入</strong>：<code>StructuredContent</code> + <code>Transcript</code>（含时间戳，用于溯源）。</li>
+<li><strong>定位（v1.1 关键校准）</strong>：反馈为<strong>"提示/参考"而非"评价/打分"</strong>——命中政策红线"严禁直接用 AI 输出作为评价结论"，也规避行业公认痛点（AI 判题不准→老师不信）。每份报告保留<strong>教师修正/采纳/忽略入口</strong>。</li>
+<li><strong>处理规则</strong>：生成以下维度反馈——</li>
+<li>①知识点覆盖度（planned/covered/missed）</li>
+<li>②课堂时间分配（讲授 / 互动 / 练习 时长占比，<strong>基于转写时间戳测算，可视化时间轴</strong>）</li>
+<li>③师生互动·提问有效性（<strong>提问频次、开放性提问占比、候答时间、追问深度</strong>，替代原粗粒度"互动"）</li>
+<li>④疑似难点（含 evidence）</li>
+<li>⑤可执行改进建议（恰好 3 条，指向具体知识点）</li>
+<li><strong>溯源（v1.1 新增·最重要）</strong>：每条结论/难点/建议须附 <code>evidence_refs</code>——可跳转回对应转写片段与<strong>音频时间戳</strong>（对标希沃"证据链"卖点；无溯源老师不信）。</li>
+<li><strong>输出</strong>：<code>FeedbackReport</code>（结构化维度 + 建议数组 + 每项 <code>evidence_refs</code>）。</li>
+<li><strong>能力边界（v1.1 诚实声明）</strong>：纯音频<strong>不采集视觉信号</strong>（抬头率/微笑/表情），故<strong>不产出任何视觉类指标</strong>；嘈杂/多人同时说话的片段，互动与节奏识别置信度下降，低置信结论标 <code>low_confidence</code> 并弱化展示。</li>
+<li><strong>约束</strong>：不增加老师任何录入；建议必须可执行、具体到知识点；结论以参考语气呈现，禁"给老师打分定性"。</li>
+</ul>
+<h3 id="f6">F6 分层预习/复习生成</h3>
+<ul>
+<li><strong>触发</strong>：F4 完成后，按班级学生名单逐人生成。</li>
+<li><strong>输入</strong>：<code>Note</code> + 每个学生的 <code>level</code>(basic/advanced)。</li>
+<li><strong>分层规则（双来源）</strong>：</li>
+<li><strong>冷启动</strong>：读学校提供的数学成绩标签 → basic / advanced。</li>
+<li><strong>建档细化</strong>：随使用回流(笔记完成度、复习正确率、错题分布)更新 <code>StudentProfile</code>，动态修正 level。</li>
+<li>无成绩标签的学生→默认 basic，并标 <code>level_source=default</code>。</li>
+<li><strong>输出</strong>：每生一份 <code>LearningTask</code>（预习提纲 + 复习任务，按档差异化难度/题量）。</li>
+<li><strong>可见性与伦理约束（v1.1 新增）</strong>：分层层级（basic/advanced）<strong>仅对老师可见</strong>，作教学参考；<strong>家长端纯通知绝不透露层级</strong>，学生端也不显式标注"你被分到 basic"——规避"给学生贴标签/教育公平"敏感线（对标松鼠/作业帮均避免用单一总分给学生贴层）。</li>
+<li><strong>失真风险与演进（v1.1 新增）</strong>：Demo 用学校成绩标签（总分）冷启动，须明确其<strong>局限——总分掩盖具体知识点漏洞</strong>；分层维度<strong>尽快从总分升级到知识点级</strong>（v2 目标，结合 <code>weak_points</code> 回流），避免静态标签失真。</li>
+<li><strong>边界/异常</strong>：学生名单缺失→仅生成班级通用版；某生 profile 缺失→走 default。</li>
+</ul>
+<h3 id="f7">F7 教师端查看与分发（钉钉内）</h3>
+<ul>
+<li><strong>触发</strong>：F5 完成，教师打开钉钉工作台入口。</li>
+<li><strong>功能</strong>：课堂列表→反馈报告详情→一键分发(笔记给学生/通知给家长)。</li>
+<li><strong>边界/异常</strong>：内容生成中→展示"处理中"状态；分发失败→可重试并提示。</li>
+</ul>
+<h3 id="f8">F8 家长纯通知</h3>
+<ul>
+<li><strong>触发</strong>：教师分发 或 系统定时(课后 + 复习提醒时间点)。</li>
+<li><strong>功能</strong>：推送今日数学课堂摘要 + 复习提醒（纯展示，无交互）。</li>
+<li><strong>边界/异常</strong>：家长未绑定→跳过并记录 <code>parent_unbound</code>。</li>
+</ul>
+<hr />
+<h2 id="_1">第三部分 · 数据与接口</h2>
+<h2 id="6">6. 数据模型（核心实体）</h2>
+<blockquote>
+<p>Demo 级，字段可扩展。类型示意：str/int/enum/datetime/json/text。</p>
+</blockquote>
+<p><strong>School</strong>：<code>school_id</code>(PK), <code>name</code><br />
+<strong>Class</strong>：<code>class_id</code>(PK), <code>school_id</code>(FK), <code>name</code>(如"初二3班"), <code>grade</code><br />
+<strong>Teacher</strong>：<code>teacher_id</code>(PK), <code>school_id</code>, <code>name</code>, <code>dingtalk_userid</code>, <code>subject</code><br />
+<strong>Student</strong>：<code>student_id</code>(PK), <code>class_id</code>, <code>name</code>, <code>dingtalk_userid</code>(可空)<br />
+<strong>Parent</strong>：<code>parent_id</code>(PK), <code>student_id</code>(FK), <code>dingtalk_userid</code>(可空), <code>bound</code>(bool)<br />
+<strong>ClassSession</strong>（课堂）：<code>session_id</code>(PK), <code>class_id</code>, <code>teacher_id</code>, <code>subject</code>, <code>topic</code>, <code>start_time</code>, <code>duration</code>, <code>status</code>(enum: uploaded/transcribed/structured/generated/failed/too_short), <code>created_at</code><br />
+<strong>Transcript</strong>：<code>transcript_id</code>(PK), <code>session_id</code>(FK), <code>segments</code>(json: [{start,end,speaker,text,low_confidence}]), <code>status</code><br />
+<strong>StructuredContent</strong>：<code>struct_id</code>(PK), <code>session_id</code>, <code>phases</code>(json), <code>knowledge_points</code>(json), <code>interactions</code>(json), <code>difficulties</code>(json), <code>degraded</code>(bool)<br />
+<strong>Note</strong>（学生笔记）：<code>note_id</code>(PK), <code>session_id</code>, <code>content_md</code>(text), <code>knowledge_tags</code>(json), <code>highlights</code>(json), <code>status</code><br />
+<strong>FeedbackReport</strong>（教师反馈）：<code>report_id</code>(PK), <code>session_id</code>, <code>coverage</code>(json), <code>time_distribution</code>(json: {lecture_pct,interaction_pct,practice_pct}), <code>interaction_analysis</code>(json: {total_questions,open_ended_pct,avg_wait_sec,follow_up_depth}), <code>difficulties</code>(json: [{point,evidence,evidence_refs}]), <code>suggestions</code>(json: 3条,每条含 evidence_refs), <code>low_confidence</code>(bool), <code>teacher_action</code>(json: 每项的 采纳/忽略/修正), <code>status</code><br />
+<strong>StudentProfile</strong>（学生画像/建档）：<code>student_id</code>(PK), <code>level</code>(enum: basic/advanced), <code>level_source</code>(enum: school_score/system_built/default), <code>note_completion_rate</code>(float), <code>review_accuracy</code>(float), <code>weak_points</code>(json), <code>updated_at</code><br />
+<strong>LearningTask</strong>（分层任务）：<code>task_id</code>(PK), <code>student_id</code>, <code>session_id</code>, <code>type</code>(enum: preview/review), <code>level</code>, <code>content_md</code>(text), <code>item_count</code>(int), <code>completed</code>(bool)<br />
+<strong>Notification</strong>（家长通知）：<code>notif_id</code>(PK), <code>parent_id</code>, <code>session_id</code>, <code>type</code>(enum: summary/reminder), <code>content</code>(text), <code>sent_at</code>, <code>status</code>(enum: sent/failed/skipped)</p>
+<p><strong>关系（ER 摘要）</strong>：School 1-N Class 1-N Student 1-1 StudentProfile；Student 1-N Parent；Class 1-N ClassSession 1-1 Transcript 1-1 StructuredContent；ClassSession 1-1 Note、1-1 FeedbackReport、1-N LearningTask；Parent 1-N Notification。</p>
+<h2 id="7-api-demo">7. 接口契约（API · demo 级示例）</h2>
+<blockquote>
+<p>统一：REST/JSON，<code>Content-Type: application/json</code>；鉴权 Header <code>Authorization: Bearer &lt;token&gt;</code>；统一错误体 <code>{"code":int,"msg":str,"data":null}</code>。错误码：0成功 / 40001参数错 / 40101未授权 / 42201音频不合规 / 42202时长过短 / 50001转写失败 / 50002生成失败 / 50000系统错。</p>
+</blockquote>
+<p><strong>内部接口</strong></p>
+<p><code>POST /api/v1/sessions</code> — 上传音频并建档(F1)</p>
+<pre><code class="language-json">// 请求 (multipart: audio_file + 下列 json 字段)
+{&quot;class_id&quot;:&quot;c_1001&quot;,&quot;teacher_id&quot;:&quot;t_2001&quot;,&quot;subject&quot;:&quot;math&quot;,&quot;start_time&quot;:&quot;2026-07-23T08:00:00+08:00&quot;,&quot;duration&quot;:2700,&quot;topic&quot;:&quot;一元一次方程&quot;}
+// 响应
+{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;session_id&quot;:&quot;s_30001&quot;,&quot;status&quot;:&quot;uploaded&quot;}}
+</code></pre>
+<p><code>POST /api/v1/asr/callback</code> — ASR 回调写转写(F2，供 ASR 服务回调)</p>
+<pre><code class="language-json">// 请求
+{&quot;session_id&quot;:&quot;s_30001&quot;,&quot;segments&quot;:[{&quot;start&quot;:0.0,&quot;end&quot;:5.2,&quot;speaker&quot;:&quot;teacher&quot;,&quot;text&quot;:&quot;今天我们学习一元一次方程&quot;,&quot;low_confidence&quot;:false}]}
+// 响应
+{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;transcript_id&quot;:&quot;tr_40001&quot;,&quot;status&quot;:&quot;transcribed&quot;}}
+</code></pre>
+<p><code>POST /api/v1/sessions/{session_id}/generate</code> — 触发结构化+内容生成(F3-F6)</p>
+<pre><code class="language-json">{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;status&quot;:&quot;generating&quot;}}
+</code></pre>
+<p><code>GET /api/v1/sessions/{session_id}</code> — 查询课堂状态与产物索引</p>
+<pre><code class="language-json">{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;session_id&quot;:&quot;s_30001&quot;,&quot;status&quot;:&quot;generated&quot;,&quot;note_id&quot;:&quot;n_50001&quot;,&quot;report_id&quot;:&quot;r_60001&quot;,&quot;task_ids&quot;:[&quot;lt_1&quot;,&quot;lt_2&quot;]}}
+</code></pre>
+<p><code>GET /api/v1/notes/{note_id}</code> — 学生笔记详情(F4)</p>
+<pre><code class="language-json">{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;note_id&quot;:&quot;n_50001&quot;,&quot;content_md&quot;:&quot;# 一元一次方程\n## 知识点\n- 定义...&quot;,&quot;knowledge_tags&quot;:[&quot;一元一次方程&quot;,&quot;移项&quot;,&quot;合并同类项&quot;],&quot;highlights&quot;:[{&quot;point&quot;:&quot;移项要变号&quot;,&quot;type&quot;:&quot;difficulty&quot;}]}}
+</code></pre>
+<p><code>GET /api/v1/reports/{report_id}</code> — 教师反馈详情(F5)</p>
+<pre><code class="language-json">{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;report_id&quot;:&quot;r_60001&quot;,&quot;coverage&quot;:{&quot;planned&quot;:5,&quot;covered&quot;:4,&quot;missed&quot;:[&quot;实际应用题&quot;]},&quot;time_distribution&quot;:{&quot;lecture_pct&quot;:60,&quot;interaction_pct&quot;:25,&quot;practice_pct&quot;:15},&quot;interaction_analysis&quot;:{&quot;total_questions&quot;:6,&quot;open_ended_pct&quot;:33,&quot;avg_wait_sec&quot;:2.5,&quot;follow_up_depth&quot;:1},&quot;difficulties&quot;:[{&quot;point&quot;:&quot;移项变号&quot;,&quot;evidence&quot;:&quot;该环节重复讲解2次，学生追问多&quot;,&quot;evidence_refs&quot;:[{&quot;segment_start&quot;:180.0,&quot;segment_end&quot;:320.0,&quot;text&quot;:&quot;学生：老师，移项为什么变号？&quot;}]}],&quot;suggestions&quot;:[&quot;移项环节增加1道对比练习&quot;,&quot;应用题建议下节课补充&quot;,&quot;例题放慢，留2分钟自主计算&quot;],&quot;low_confidence&quot;:false}}
+</code></pre>
+<p><code>GET /api/v1/students/{student_id}/tasks?session_id=</code> — 分层任务(F6)</p>
+<pre><code class="language-json">{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;tasks&quot;:[{&quot;task_id&quot;:&quot;lt_1&quot;,&quot;type&quot;:&quot;review&quot;,&quot;level&quot;:&quot;basic&quot;,&quot;content_md&quot;:&quot;复习：完成移项练习5题...&quot;,&quot;item_count&quot;:5}]}}
+</code></pre>
+<p><code>POST /api/v1/sessions/{session_id}/distribute</code> — 一键分发(F7)</p>
+<pre><code class="language-json">// 请求
+{&quot;targets&quot;:[&quot;students&quot;,&quot;parents&quot;]}
+// 响应
+{&quot;code&quot;:0,&quot;msg&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;note_sent&quot;:42,&quot;parent_notified&quot;:38,&quot;parent_unbound&quot;:4}}
+</code></pre>
+<p><strong>外部对接（demo 级说明）</strong></p>
+<ul>
+<li><strong>钉钉</strong>：①教师端载体——通过钉钉工作台 H5/微应用嵌入，用钉钉免登获取 <code>dingtalk_userid</code> 映射 <code>teacher_id</code>；②录音卡片取数——从钉钉侧回调/拉取课堂音频(接口以钉钉开放平台文档为准，demo 可用手动上传兜底)；③家长通知——经钉钉消息/工作通知下发。</li>
+<li><strong>ASR 服务</strong>：<code>POST {asr_endpoint}/transcribe</code>，入参音频URL+<code>hotwords=数学词库</code>，异步回调本系统 <code>/api/v1/asr/callback</code>。<strong>热词库开放校本自定义（v1.1）</strong>：支持学校/老师按教材版本、常用口头表述导入自定义热词（对标讯飞听见/通义听悟；B端落地刚需）——<code>hotwords</code> = 系统数学基础词库 ∪ 校本自定义词库。</li>
+<li><strong>LLM 服务</strong>：内容生成统一走内部生成服务封装(prompt 见 §11)，入参 <code>StructuredContent</code>，出参对应结构化 JSON；需设置超时与重试。</li>
+</ul>
+<hr />
+<h2 id="ai">第四部分 · 前端与 AI</h2>
+<h2 id="8">8. 页面与交互清单</h2>
+<blockquote>
+<p>每页给：元素 / 交互 / 状态(加载·空·失败·成功) / 跳转。</p>
+</blockquote>
+<p><strong>教师端（钉钉微应用）</strong></p>
+<p>P1 课堂列表<br />
+- 元素：日期筛选、课堂卡片(课题/时间/状态徽标)<br />
+- 交互：点卡片→P2；下拉刷新<br />
+- 状态：加载骨架 / 空("暂无课堂记录") / 失败(重试) / 成功列表<br />
+- 跳转：→P2</p>
+<p>P2 反馈报告详情<br />
+- 元素：5 维反馈(覆盖/节奏/互动/难点/3条建议)、一键分发按钮<br />
+- 交互：展开难点证据、点"分发"→弹分发确认(学生笔记/家长通知多选)<br />
+- 状态：处理中("内容生成中，约需30分钟") / 失败 / 成功 / 分发中/分发结果 toast<br />
+- 跳转：→P3(可选查看对应学生笔记预览)</p>
+<p>P3 笔记预览（教师视角）<br />
+- 元素：与学生笔记同源只读预览<br />
+- 状态：加载/空/成功</p>
+<p><strong>学生端（钉钉或轻 H5）</strong></p>
+<p>P4 课堂笔记详情<br />
+- 元素：知识点树、重点/难点高亮、例题解题步骤、公式排版<br />
+- 交互：折叠展开、标记"已复习"<br />
+- 状态：加载/空/失败/成功<br />
+- 跳转：→P5</p>
+<p>P5 预习/复习任务<br />
+- 元素：任务列表(按 basic/advanced 差异)、题量、完成勾选<br />
+- 交互：勾选完成→回写 <code>LearningTask.completed</code>(埋点)<br />
+- 状态：加载/空("今日无任务")/成功</p>
+<p><strong>家长端（钉钉工作通知 · 纯展示）</strong></p>
+<p>P6 通知详情<br />
+- 元素：今日数学课堂摘要 + 复习提醒文本<br />
+- 交互：无（纯展示，点击可跳 P4 只读，可选）<br />
+- 状态：展示 / (未绑定则不下发)</p>
+<p><strong>权限矩阵</strong></p>
+<table>
+<thead>
+<tr>
+<th>页面/数据</th>
+<th>教师</th>
+<th>学生</th>
+<th>家长</th>
+<th>校管</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本班反馈报告</td>
+<td>✅本人课</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅本校</td>
+</tr>
+<tr>
+<td>学生笔记</td>
+<td>✅本班</td>
+<td>✅本人</td>
+<td>✅只读孩子</td>
+<td>✅本校</td>
+</tr>
+<tr>
+<td>分层任务</td>
+<td>✅本班</td>
+<td>✅本人</td>
+<td>❌</td>
+<td>✅本校</td>
+</tr>
+<tr>
+<td>家长通知</td>
+<td>发起</td>
+<td>❌</td>
+<td>✅本人</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9">9. 非功能需求（可测量）</h2>
+<ul>
+<li>⚠️ <strong>合规</strong>：Demo 阶段搁置真实学生录音；正式进校前必须补齐(PIPL/未成年人保护/双重知情同意/数据最小化/可删除)。</li>
+<li><strong>音频能力边界（v1.1 明确）</strong>：本产品仅采集课堂音频（无视觉多模态硬件），<strong>不承诺任何视觉类指标</strong>（抬头率/微笑/表情/坐姿）；教师反馈仅覆盖音频可靠推断的维度（覆盖度/时间分配/提问有效性/难点）。嘈杂或多人同时说话场景转写与互动识别准确度会下降，低置信内容显式标注，不做过度承诺。</li>
+<li><strong>性能</strong>：单堂课全链路(上传→笔记+反馈就绪) ≤30 分钟；转写字准率(课堂中文+数学术语) ≥90%；教师端页面首屏 ≤2s。</li>
+<li><strong>并发</strong>：demo 支持同校 ≥20 节课并行处理排队不丢。</li>
+<li><strong>兼容</strong>：钉钉最新版 iOS/Android + 钉钉工作台 H5；学生/家长端主流手机浏览器。</li>
+<li><strong>可用性</strong>：老师端 0 学习成本、0 额外录入。</li>
+<li><strong>可靠性</strong>：转写/生成失败有重试与状态可见，不静默丢任务。</li>
+</ul>
+<h2 id="10">10. 数据与成功指标 + 埋点</h2>
+<p><strong>北极星</strong>：周活跃"完成一次完整学习闭环"的学生数(收到笔记→完成一次预习或复习)。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>事件</th>
+<th>触发点</th>
+<th>关键属性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>复习完成率</td>
+<td><code>task_completed</code></td>
+<td>P5 勾选完成</td>
+<td>student_id, task_id, type, level</td>
+</tr>
+<tr>
+<td>预习打开率</td>
+<td><code>task_opened</code></td>
+<td>P5 打开</td>
+<td>student_id, task_id, type</td>
+</tr>
+<tr>
+<td>笔记查看</td>
+<td><code>note_viewed</code></td>
+<td>P4 打开</td>
+<td>student_id, note_id</td>
+</tr>
+<tr>
+<td>反馈查看率</td>
+<td><code>report_viewed</code></td>
+<td>P2 打开</td>
+<td>teacher_id, report_id</td>
+</tr>
+<tr>
+<td>建议采纳</td>
+<td><code>suggestion_adopted</code></td>
+<td>P2 标记采纳</td>
+<td>teacher_id, suggestion_id</td>
+</tr>
+<tr>
+<td>分发行为</td>
+<td><code>content_distributed</code></td>
+<td>P2 分发成功</td>
+<td>session_id, targets, counts</td>
+</tr>
+<tr>
+<td>连续使用</td>
+<td><code>daily_active</code></td>
+<td>任一端当日活跃</td>
+<td>role, user_id</td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-ai">11. AI 内容生成规格（核心）</h2>
+<blockquote>
+<p>每类内容给：输出结构 + prompt 设计要点 + 质量约束 + 幻觉兜底。所有生成<strong>仅基于本堂转写与结构化内容，禁止编造未出现的知识点</strong>。</p>
+</blockquote>
+<p><strong>11.1 学生笔记(F4)</strong><br />
+- 输出结构：<code># 课题</code> → <code>## 知识点</code>(定义/公式/定理) → <code>## 例题与解法</code>(步骤化) → <code>## 重点难点</code>(标注) → <code>## 课后待办</code>。<br />
+- Prompt 要点：角色="初中数学笔记助教"；输入=结构化知识点+环节+转写；要求=忠实转写、步骤清晰、公式用 LaTeX、面向初中生语言。<br />
+- 质量约束：知识点必须来自 <code>knowledge_points</code>；例题引用老师原话/板书。<br />
+- 幻觉兜底：无依据不写；转写缺失段落标"(此处录音不清)"。</p>
+<p><strong>11.2 教师反馈(F5) — v1.1 循证参考定位</strong><br />
+- 输出结构：覆盖度(planned/covered/missed) / 时间分配(讲授/互动/练习占比) / 互动分析(提问频次/开放性占比/候答时间/追问深度) / 难点(含 evidence + 可溯源音频时间戳) / 建议(恰好3条,可执行,指向具体知识点,每条含 evidence_refs)。<br />
+- Prompt 要点：角色="资深教研员"；客观、基于证据(引用互动与重复讲解次数)；建议具体化；<strong>语气为"参考/提示"而非"评价/打分"</strong>；<strong>禁"本节课堂整体表现..."类定性表述</strong>。<br />
+- 质量约束：难点必须给 evidence + 时间戳；建议不空泛(禁"多互动"这类)；所有结论必须附溯源引用。<br />
+- 能力边界：纯音频不产出视觉类指标；低置信片段标 <code>low_confidence</code> 弱化展示。</p>
+<p><strong>11.3 分层任务(F6)</strong><br />
+- 输出结构：预习提纲 + 复习任务(题目/题量按 level 差异)。<br />
+- Prompt 要点：输入=笔记知识点+student level+weak_points；basic 侧重巩固基础与本堂难点，advanced 侧重拓展/应用/多步。<br />
+- 质量约束：题目围绕本堂知识点；basic 题量适中、难度贴合；advanced 增设应用题。<br />
+- 幻觉兜底：不超纲；无 profile 走 basic 默认模板。</p>
+<p><strong>11.4 家长通知(F8)</strong><br />
+- 输出结构：一句话课堂摘要 + 今日复习提醒(要点+时间)。<br />
+- 约束：≤150 字、纯文本、无术语堆砌、家长易懂。</p>
+<hr />
+<h2 id="_2">第五部分 · 验收与测试</h2>
+<h2 id="12-given-when-then">12. 验收标准（Given-When-Then）</h2>
+<p><strong>F1 上传建档</strong><br />
+- Given 合规音频≥5min，When 上传，Then 创建 session 且 status=uploaded，返回 session_id。<br />
+- Given 音频&lt;5min，When 上传，Then status=too_short 且不触发后续生成。<br />
+- Given 不支持格式，When 上传，Then 返回 42201 拒绝。</p>
+<p><strong>F2 转写</strong><br />
+- Given session=uploaded，When 转写完成，Then 生成带时间戳+说话人分离的 segments，status=transcribed。<br />
+- Given ASR 连续失败，When 重试耗尽，Then status=transcribe_failed 且告警。</p>
+<p><strong>F3 结构化</strong><br />
+- Given 转写正常，When 结构化，Then 输出环节/知识点/互动/难点四类且非空。<br />
+- Given 转写质量差，When 结构化，Then degraded=true 且降级为时间轴笔记。</p>
+<p><strong>F4 笔记</strong><br />
+- Given 结构化成功，When 生成，Then 笔记含知识点/例题/重点难点，且知识点均来自 knowledge_points(无编造)。</p>
+<p><strong>F5 反馈</strong><br />
+- Given 结构化成功，When 生成，Then 反馈含 5 维且建议恰为 3 条、均可执行、指向具体知识点。</p>
+<p><strong>F6 分层</strong><br />
+- Given 学生有成绩标签，When 生成，Then 按 basic/advanced 产出差异化任务。<br />
+- Given 学生无标签，When 生成，Then level=basic 且 level_source=default。</p>
+<p><strong>F7 分发</strong><br />
+- Given 报告已生成，When 一键分发，Then 笔记送达学生、通知送达已绑定家长，返回各计数，未绑定家长计入 parent_unbound。</p>
+<p><strong>F8 家长通知</strong><br />
+- Given 家长已绑定，When 分发/定时触发，Then 收到 ≤150 字摘要+提醒。<br />
+- Given 家长未绑定，When 触发，Then status=skipped 不报错。</p>
+<h2 id="13">13. 测试用例清单</h2>
+<p><strong>正常流(冒烟)</strong><br />
+- TC-01 完整链路：上传一节真实初中数学课→30min 内笔记+反馈就绪→分发成功。<br />
+- TC-02 教师端查看反馈报告并采纳建议(埋点上报)。<br />
+- TC-03 学生查看笔记、完成复习任务(completed 回写+埋点)。</p>
+<p><strong>边界</strong><br />
+- TC-10 音频恰好 5min / 4min59s(临界 too_short)。<br />
+- TC-11 无成绩标签学生分层(走 default)。<br />
+- TC-12 班级部分学生未绑定钉钉(笔记跳过/家长 skipped)。<br />
+- TC-13 同校 20 节课并行处理排队。<br />
+- TC-14 转写含大量数学术语(词库纠错生效)。</p>
+<p><strong>异常/降级</strong><br />
+- TC-20 不支持音频格式→42201。<br />
+- TC-21 ASR 失败重试耗尽→transcribe_failed+告警，不产脏数据。<br />
+- TC-22 LLM 生成超时→重试后失败标 50002，前端显失败可重试。<br />
+- TC-23 转写质量极差→degraded 降级笔记，不崩。<br />
+- TC-24 分发中网络失败→可重试，不重复发送。</p>
+<p><strong>权限</strong><br />
+- TC-30 教师 A 不能看教师 B 的班级报告。<br />
+- TC-31 家长只能看自己孩子只读笔记。<br />
+- TC-32 学生看不到分层任务外的他人数据。</p>
+<p><strong>AI 质量(人工评审)</strong><br />
+- TC-40 笔记知识点无编造(抽 10 堂人工核对)。<br />
+- TC-41 反馈建议均可执行、非空泛(评分表)。<br />
+- TC-42 分层任务 basic/advanced 难度确有区分。<br />
+- TC-43 家长通知 ≤150 字、家长可懂。</p>
+<p><strong>Demo 专项验收</strong><br />
+- TC-50 5 分钟脚本全流程可跑通(见 §15)，各环节界面正常、无报错、内容质量达展示标准。</p>
+<hr />
+<h2 id="_3">第六部分 · 交付与演示</h2>
+<h2 id="14-v02">14. 路线图（承接 v0.2）</h2>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>时间</th>
+<th>目标</th>
+<th>验收</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1</td>
+<td>第1月</td>
+<td>初中数学 录音→转写→笔记 打通</td>
+<td>TC-01部分/F1-F4</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>第2月</td>
+<td>教师反馈+钉钉教师端集成</td>
+<td>F5/F7/TC-02</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>第3月</td>
+<td>分层预复习+家长通知+试点</td>
+<td>F6/F8/TC-03/TC-50</td>
+</tr>
+<tr>
+<td>后续</td>
+<td>3月+</td>
+<td>补合规、扩学科、家长交互、每生独立知识库、教师端独立化</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="15-demo-5">15. Demo 演示脚本（5 分钟 · 初中数学）</h2>
+<ol>
+<li>场景引入(30s)：初中数学课"一元一次方程"，老师戴录音卡片正常上课。</li>
+<li>数据采集(30s)：钉钉录音卡片自动采集→上传(F1)。</li>
+<li>AI 处理(60s)：转写+结构化，高亮识别到的知识点/例题/互动(F2-F3)。</li>
+<li>学生笔记(60s)：结构化数学笔记——移项解法步骤、重点公式、老师原话例题(F4/P4)。</li>
+<li>老师反馈(60s)：<strong>循证参考</strong>反馈——覆盖度、时间分配时间轴、提问有效性、"移项变号"疑似难点(可点击溯源到录音片段)、3 条改进建议(F5/P2)；强调"参考非打分、老师可修正"。</li>
+<li>分层个性化(60s)：同课，基础生(巩固移项5题) vs 拔高生(多步方程+应用题)两份复习(F6/P5)。</li>
+<li>收尾愿景(30s)：展望每生独立知识库→千人千面。</li>
+</ol>
+<h2 id="16">16. 风险与假设</h2>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>影响</th>
+<th>应对</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据合规不过审</td>
+<td>无法进校(致命)</td>
+<td>demo后进校前专项补齐</td>
+</tr>
+<tr>
+<td>数学课录音质量差(公式口述/口音)</td>
+<td>转写差→内容差</td>
+<td>降噪+数学词库+人工校准兜底</td>
+</tr>
+<tr>
+<td>依赖钉钉硬件/生态</td>
+<td>受制于人</td>
+<td>教师端预留独立化架构(本期不做)</td>
+</tr>
+<tr>
+<td>"好习惯"难验收</td>
+<td>价值说不清</td>
+<td>北极星行为闭环量化</td>
+</tr>
+<tr>
+<td>LLM 生成幻觉</td>
+<td>笔记/反馈失真</td>
+<td>强制基于转写、无依据不写、人工抽检</td>
+</tr>
+<tr>
+<td>老师抵触额外负担</td>
+<td>教师端流失</td>
+<td>坚持0操作原则</td>
+</tr>
+<tr>
+<td><strong>纯音频反馈精准度天花板</strong>（无视觉信号，嘈杂多人转写差）</td>
+<td>反馈不准→老师不信</td>
+<td>诚实界定音频可得维度、不承诺视觉指标、低置信标注、反馈定位"参考"+教师可修正</td>
+</tr>
+<tr>
+<td><strong>成绩标签分层失真+贴标签伦理风险</strong></td>
+<td>分层不准/家长学校敏感</td>
+<td>层级仅老师可见、家长端不透露、尽快升级到知识点级</td>
+</tr>
+<tr>
+<td><strong>被钉钉A1等通用工具免费覆盖</strong>（录音转笔记已红海）</td>
+<td>无壁垒→无付费理由</td>
+<td>护城河押在通用工具做不到的处：数学公式/步骤化+循证教师反馈+分层，三者由一段录音串起</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键假设</strong>：钉钉录音卡片稳定采集可用音频；学校提供成绩标签并开放课堂；家长接受纯通知。</p>
+<h2 id="17">17. 未决/依赖（交付前需对齐）</h2>
+<ol>
+<li>钉钉开放平台：录音卡片取数与工作通知的<strong>具体接口与权限申请</strong>流程与时间。</li>
+<li>ASR 供应商选型与数学热词库来源。</li>
+<li>LLM 供应商/模型选型与成本预算(单堂课 token 估算)。</li>
+<li>学校成绩标签的<strong>数据格式与导入方式</strong>(Excel/API)。</li>
+<li>Demo 用的真实课堂音频样本获取(≥3 节初中数学课)。</li>
+</ol>
+<hr />
+<h2 id="18-v11">18. 市场与竞品校准（v1.1 新增）</h2>
+<blockquote>
+<p>本章节基于 2026-07-23 实时市场调研与竞品分析，结论全部来自公开资料检索（教育部/CERNET 官方文件、艾瑞/华经/民生证券报告、希沃/科大讯飞/好未来/钉钉等官方渠道）。竞品分析完整原文落盘至作品集目录。</p>
+</blockquote>
+<h3 id="181">18.1 赛道判断</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>结论</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K12 GenAI 渗透率</td>
+<td>仅 10-15%——教育各赛道中最低，窗口期存在</td>
+<td>艾瑞《2026 GenAI+教育报告》</td>
+</tr>
+<tr>
+<td>政策方向</td>
+<td>全部命中《中小学生成式AI使用指南（2025）》允许清单（辅助教学/分层学习/学情分析）；初中数学恰好落在允许区间</td>
+<td>教育部基础教育教指委</td>
+</tr>
+<tr>
+<td>双减红线</td>
+<td>本产品定位校内教学辅助/家校工具，不碰校外学科培训，不踩红线</td>
+<td>民生证券 K12 策略</td>
+</tr>
+<tr>
+<td>未成年人数据合规</td>
+<td>Playbook 存在但确实重：监护人单独同意+数据最小化+年度审计+不训练模型+AIGC标识</td>
+<td>金杜·未成年人合规审计</td>
+</tr>
+</tbody>
+</table>
+<h3 id="182">18.2 竞品覆盖度矩阵</h3>
+<table>
+<thead>
+<tr>
+<th>竞品</th>
+<th>课堂录音/语音采集</th>
+<th>自动学生笔记</th>
+<th>教师教学反馈</th>
+<th>分层/个性化</th>
+<th>数学公式垂直</th>
+<th>老师0操作</th>
+<th>切入端</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>科大讯飞</td>
+<td>✅</td>
+<td>△(微课留存)</td>
+<td>△(教研反思)</td>
+<td>✅</td>
+<td>✅公式转写</td>
+<td>△</td>
+<td>B(重)+C</td>
+</tr>
+<tr>
+<td><strong>希沃课堂反馈</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>✅★标杆</td>
+<td>❌</td>
+<td>❌(多语文)</td>
+<td>✅</td>
+<td>B</td>
+</tr>
+<tr>
+<td>好未来九章</td>
+<td>✅(教培)</td>
+<td>△(笔记分级)</td>
+<td>✅(四色分级)</td>
+<td>✅</td>
+<td>✅MathGPT</td>
+<td>△</td>
+<td>C强+B</td>
+</tr>
+<tr>
+<td>作业帮</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅练习分层</td>
+<td>✅</td>
+<td>—</td>
+<td>C</td>
+</tr>
+<tr>
+<td>猿辅导</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅诊学练</td>
+<td>✅分步批改</td>
+<td>—</td>
+<td>C</td>
+</tr>
+<tr>
+<td>松鼠AI</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅★自适应</td>
+<td>✅</td>
+<td>—</td>
+<td>B+C</td>
+</tr>
+<tr>
+<td>网易有道</td>
+<td>△(笔迹/OCR)</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅学情</td>
+<td>✅公式OCR</td>
+<td>△</td>
+<td>B+C</td>
+</tr>
+<tr>
+<td>钉钉A1/通义听悟等通用工具</td>
+<td>✅</td>
+<td>△(通用摘要)</td>
+<td>△(教案模板)</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>C/通用</td>
+</tr>
+<tr>
+<td><strong>本产品</strong></td>
+<td>✅录音卡</td>
+<td>✅LaTeX+步骤化</td>
+<td>✅循证参考+溯源</td>
+<td>✅成绩冷启动</td>
+<td>✅数学热词库</td>
+<td>✅★</td>
+<td>B(学校)</td>
+</tr>
+</tbody>
+</table>
+<p>★=该维赛道最强。<strong>无一家在同一条录音管线上同时打满"学生笔记+教师反馈+分层"三格。</strong></p>
+<h3 id="183">18.3 差异化空间</h3>
+<ol>
+<li><strong>"一段录音，三方产出"的组合是空白</strong>——希沃只给老师、松鼠/作业帮只给学生、钉钉A1只给通用摘要。本产品是唯一的一鱼三吃。</li>
+<li><strong>初中数学垂直，竞品多走通用/语文</strong>——希沃案例多为小学语文；通用工具不做学科。本产品的数学热词库+LaTeX公式+例题步骤化是通用工具做不出的深的切口。</li>
+<li><strong>老师0操作0硬件改造</strong>——希沃需专用AI硬件、讯飞需整套智慧课堂。本产品一张钉钉录音卡+纯软件，实施门槛最低。</li>
+<li><strong>分层冷启动更轻</strong>——松鼠靠前置测评、作业帮靠海量做题数据。本产品用学校现成成绩标签冷启动，当天即可用。</li>
+</ol>
+<h3 id="184-prd">18.4 竞品验证后需新增至PRD的功能（已在本版落地）</h3>
+<table>
+<thead>
+<tr>
+<th>竞品验证点</th>
+<th>本PRD对应改动</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①反馈须循证可溯源</td>
+<td>F5 每条结论/建议附 <code>evidence_refs</code> → 音频时间戳</td>
+<td>希沃核心卖点</td>
+</tr>
+<tr>
+<td>②教师提问有效性分析</td>
+<td>F5 新增 <code>interaction_analysis</code>(频次/开放性/候答/追问)</td>
+<td>希沃+好未来</td>
+</tr>
+<tr>
+<td>③课堂时间分配可视化</td>
+<td>F5 新增 <code>time_distribution</code>(讲授/互动/练习占比)</td>
+<td>希沃+好未来</td>
+</tr>
+<tr>
+<td>④自定义热词/校本知识库</td>
+<td>§7 ASR 热词库开放校本自定义</td>
+<td>讯飞听见+通义听悟</td>
+</tr>
+</tbody>
+</table>
+<h3 id="185">18.5 竞品验证后需谨慎的高风险点（已在本版处理）</h3>
+<table>
+<thead>
+<tr>
+<th>风险点</th>
+<th>本PRD处理方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>纯录音转笔记无壁垒，被钉钉A1免费覆盖</td>
+<td>§4 决策6：主线聚焦"数学步骤化笔记"（通用工具做不出）；§3 明确此为唯一 Must 打穿深水区</td>
+</tr>
+<tr>
+<td>0操作vs反馈精准的张力（无视觉信号）</td>
+<td>F5 诚实声明纯音频能力边界+低置信标注；§9 新增"音频能力边界"；§16 新增风险条目</td>
+</tr>
+<tr>
+<td>AI反馈可信度痛点</td>
+<td>F5 定位为"参考/提示"非"评价/打分"；保留教师修正入口；命中政策"严禁AI输出做评价结论"</td>
+</tr>
+<tr>
+<td>纯成绩标签贴层失真+伦理风险</td>
+<td>F6 分层仅老师可见+家长端不透露；明确知识点级为 v2 目标；§16 新增风险条目</td>
+</tr>
+<tr>
+<td>3个月做全三件套范围过大</td>
+<td>§3 Demo 主线收窄为"数学步骤化笔记"打穿，反馈+分层做轻量演示</td>
+</tr>
+</tbody>
+</table>
+<h3 id="186">18.6 竞品分析完整文件</h3>
+<p>竞品分析（9 家竞品 + 覆盖度矩阵 + 差异化结论 + 两个清单）已落盘至作品集目录供查阅。</p>
+<hr />
+<p><em>v1.1 交付说明：本文档在 v1.0 功能规格基础上，完成市场调研 + 竞品分析校准，包含所有功能规格(FSD)、数据模型、接口契约、页面交互、AI生成规格、埋点、验收标准与测试用例，可作为研发排期与测试用例设计的输入。合规实现 Demo 阶段搁置，进校前须补齐。</em></p>
+    <div class="footer">
+      📂 本页面由仲超独立产出 · 2026-08-20<br>
+      🏠 <a href="index.html">返回作品集首页</a> · 💼 定向岗位：墨帝教育·判判事业部
+    </div>
+  </main>
+</div>
+</body>
+</html>

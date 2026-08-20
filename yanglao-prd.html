@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>养老AI助手 PRD | 仲超产品经理作品集</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <h1>仲超 · 产品经理</h1>
+    <div class="subtitle">9年PM · 主攻AI产品<br>4年明品医学AI实战</div>
+    
+<div class="contact">
+  <strong>📞 联系方式</strong>
+  手机：187-1787-9424<br>
+  邮箱：chao358@126.com<br>
+  微信：仲超<br>
+  所在地：上海·昆山花桥
+</div>
+
+    
+<nav>
+  <h3>📌 作品集首页</h3>
+  <ul>
+    <li><a href="index.html" class="section">墨帝教育 · 判判AI定向版</a></li>
+  </ul>
+
+  <h3>🏥 主牌 · 医疗AI 实战</h3>
+  <ul>
+    <li><a href="medical-cases.html">医疗AI 3 案例集</a></li>
+    <li><a href="yinfa-prd.html">银发管家 PRD（已上线 demo）</a></li>
+    <li><a href="yanglao-prd.html">养老AI助手 PRD</a></li>
+    <li><a href="shanzhi-qa.html">善智星语 Q&A（30+问答）</a></li>
+  </ul>
+
+  <h3>📚 副牌 · 教育AI 探索</h3>
+  <ul>
+    <li><a href="k12-prd.html">K12 课堂AI PRD</a></li>
+    <li><a href="k12-prototype.html">K12 课堂AI 原型</a></li>
+    <li><a href="k12-competitive.html">K12 竞品分析</a></li>
+  </ul>
+</nav>
+
+  </aside>
+  <main>
+    <h1 id="ai-prd">养老AI助手 — 产品需求文档（PRD）</h1>
+<p><strong>版本号</strong>：V1.0<br />
+<strong>日期</strong>：2026年7月13日<br />
+<strong>作者</strong>：仲超<br />
+<strong>状态</strong>：Draft<br />
+<strong>标签</strong>：养老/AI/RAG/B端工具/企业微信</p>
+<hr />
+<h2 id="_1">一、文档概述</h2>
+<h3 id="11">1.1 产品定位</h3>
+<blockquote>
+<p><strong>养老AI助手</strong>是一个基于RAG技术的智能问答工具，为养老从业者（保险代理人、护理人员、社区工作者）提供准确的养老政策、产品信息和专业知识查询服务。</p>
+</blockquote>
+<h3 id="12">1.2 目标用户</h3>
+<table>
+<thead>
+<tr>
+<th>用户群</th>
+<th>角色</th>
+<th>核心痛点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>保险代理人</td>
+<td>日常向客户解答养老政策/产品问题</td>
+<td>政策文件多且更新快，记不住；客户问得细，回答不准</td>
+</tr>
+<tr>
+<td>养老机构员工</td>
+<td>需要快速了解长护险、补贴政策</td>
+<td>培训成本高，新人上手慢</td>
+</tr>
+<tr>
+<td>社区养老工作者</td>
+<td>回答居民关于养老服务的咨询</td>
+<td>缺乏统一知识来源，回答口径不一致</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 核心价值主张</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>价值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>对从业者</td>
+<td>"秒查政策、准确回答、统一口径" — 降低知识获取成本</td>
+</tr>
+<tr>
+<td>对客户</td>
+<td>"专业可信、回答一致" — 提升信任感和成交率</td>
+</tr>
+<tr>
+<td>对机构</td>
+<td>"降低培训成本、提高服务质量" — 标准化知识输出</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14">1.4 与银发管家的关系</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>银发管家（C端）</th>
+<th>养老AI助手（B端）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目标用户</td>
+<td>老人 + 子女</td>
+<td>养老从业者（代理人/护理人员）</td>
+</tr>
+<tr>
+<td>核心功能</td>
+<td>用药提醒 + 健康管理 + 情感陪伴</td>
+<td>政策问答 + 产品知识 + 话术辅助</td>
+</tr>
+<tr>
+<td>技术重点</td>
+<td>语音交互 + 主动关怀 + RAG</td>
+<td>RAG深度优化 + 知识库管理</td>
+</tr>
+<tr>
+<td>商业模式</td>
+<td>C端订阅 + B端增值服务</td>
+<td>B端SaaS订阅</td>
+</tr>
+<tr>
+<td>协同关系</td>
+<td>养老AI助手为银发管家提供后端知识支持</td>
+<td>银发管家为养老AI助手提供C端验证场景</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">二、功能需求</h2>
+<h3 id="21">2.1 功能全景与优先级</h3>
+<pre><code>养老AI助手 V1.0（MVP）
+├── P0-核心功能（必须上线）
+│   ├── F1: 政策问答（长护险+补贴政策）
+│   └── F2: 产品知识问答（泰康之家等）
+├── P1-重要功能（V1.1上线）
+│   ├── F3: 销售话术辅助
+│   └── F4: 知识库管理后台
+└── P2-锦上添花（V2.0规划）
+    ├── F5: 方言语音交互
+    └── F6: 多模态（图片识别政策文件）
+</code></pre>
+<h3 id="22">2.2 功能详细需求</h3>
+<h4 id="f1p0">F1：政策问答（P0）</h4>
+<p><strong>用户故事</strong>：</p>
+<blockquote>
+<p>作为一位保险代理人，当我被客户问到"上海长护险怎么申请"时，我希望AI能立即给出准确的政策解读，这样我就不用翻找文件、也不会答错。</p>
+</blockquote>
+<p><strong>功能描述</strong>：<br />
+- 代理人用自然语言提问养老政策相关问题<br />
+- AI基于RAG知识库检索最新政策文件后回答<br />
+- 回答附带来源文件和日期，确保可追溯<br />
+- 支持多地区政策对比查询</p>
+<p><strong>业务规则</strong>：<br />
+| 规则编号 | 规则描述 | 触发条件 | 执行动作 |<br />
+|----------|----------|----------|----------|<br />
+| BR-01 | 政策检索 | 代理人提问政策相关问题 | RAG检索相关政策文件Top-3 |<br />
+| BR-02 | 答案生成 | 检索到相关文档 | LLM基于文档生成结构化回答 |<br />
+| BR-03 | 引用标注 | 回答生成后 | 自动附加来源文件名称和更新日期 |<br />
+| BR-04 | 未找到答案 | 检索相似度&lt;0.6 | 回答"暂未查到相关政策，建议咨询当地社保局" |<br />
+| BR-05 | 政策更新提醒 | 知识库有新政策文件 | 主动推送"XX地区长护险政策已更新" |</p>
+<p><strong>AI能力需求</strong>：<br />
+- RAG检索增强生成（向量数据库 + 大模型）<br />
+- 政策文件智能解析（PDF/Word → 结构化文本）<br />
+- 多地区政策对比（自动提取关键差异点）</p>
+<p><strong>数据字段</strong>：</p>
+<pre><code class="language-json">{
+  &quot;query&quot;: &quot;上海长护险申请条件&quot;,
+  &quot;retrieved_docs&quot;: [
+    {
+      &quot;doc_id&quot;: &quot;policy-shanghai-lchi-2026&quot;,
+      &quot;title&quot;: &quot;上海市长期护理保险实施细则（2026修订版）&quot;,
+      &quot;updated_at&quot;: &quot;2026-06-15&quot;,
+      &quot;relevance_score&quot;: 0.92,
+      &quot;key_points&quot;: [&quot;年满60周岁&quot;, &quot;失能评估3-6级&quot;, &quot;医保参保&quot;]
+    }
+  ],
+  &quot;answer&quot;: &quot;上海长护险申请条件如下：1. 已参加本市基本医疗保险...（详见《上海市长期护理保险实施细则》2026年6月修订版）&quot;
+}
+</code></pre>
+<hr />
+<h4 id="f2p0">F2：产品知识问答（P0）</h4>
+<p><strong>用户故事</strong>：</p>
+<blockquote>
+<p>作为一位保险代理人，当我需要向客户介绍泰康之家的园区时，我希望AI能快速给出各园区的对比信息，这样我可以更高效地为客户提供专业建议。</p>
+</blockquote>
+<p><strong>功能描述</strong>：<br />
+- 代理人查询养老社区、保险产品等信息<br />
+- AI基于产品知识库回答，支持对比查询<br />
+- 自动提取关键差异点（价格、位置、设施等）<br />
+- 支持生成对比表格</p>
+<p><strong>业务规则</strong>：<br />
+| 规则编号 | 规则描述 | 触发条件 | 执行动作 |<br />
+|----------|----------|----------|----------|<br />
+| BR-01 | 产品检索 | 代理人提问产品信息 | RAG检索产品文档Top-3 |<br />
+| BR-02 | 对比生成 | 查询多个产品 | 自动生成对比表格 |<br />
+| BR-03 | 卖点提炼 | 代理人请求"推荐话术" | 基于产品特点生成销售话术 |<br />
+| BR-04 | 价格更新 | 产品价格/政策变更 | 自动更新知识库并通知代理人 |</p>
+<hr />
+<h4 id="f3p1">F3：销售话术辅助（P1）</h4>
+<p><strong>用户故事</strong>：</p>
+<blockquote>
+<p>作为一位保险代理人，当客户提出价格异议时，我希望AI能给我提供应对话术，这样我可以更有信心地与客户沟通。</p>
+</blockquote>
+<p><strong>功能描述</strong>：<br />
+- 代理人输入客户异议场景（如"太贵了""再看看"）<br />
+- AI基于历史成交案例和金牌代理人话术库生成应对建议<br />
+- 提供多角度回应策略（拆分成本法、对比法、保险衔接法）<br />
+- 标注注意事项（避免使用的词汇、需要补充的信息）</p>
+<p><strong>AI能力需求</strong>：<br />
+- 场景分类（识别客户异议类型）<br />
+- 话术生成（基于案例库的个性化生成）<br />
+- 安全护栏（标注不当话术风险）</p>
+<hr />
+<h4 id="f4p1">F4：知识库管理后台（P1）</h4>
+<p><strong>用户故事</strong>：</p>
+<blockquote>
+<p>作为养老AI助手的管理员，我希望能够方便地上传和更新政策文件、产品信息，这样AI的回答就能始终保持最新。</p>
+</blockquote>
+<p><strong>功能描述</strong>：<br />
+- 管理员上传政策文件（PDF/Word/图片）<br />
+- 系统自动解析、分割、向量化、入库<br />
+- 支持手动编辑知识库片段<br />
+- 知识库更新日志和版本管理<br />
+- 问答数据统计（热门问题、未命中问题）</p>
+<p><strong>业务规则</strong>：<br />
+| 规则编号 | 规则描述 | 触发条件 | 执行动作 |<br />
+|----------|----------|----------|----------|<br />
+| BR-01 | 文件上传 | 管理员上传PDF/Word | 自动文本提取+分割+向量化 |<br />
+| BR-02 | 知识审核 | 新文件入库后 | 标记为"待审核"，管理员确认后生效 |<br />
+| BR-03 | 版本管理 | 政策文件更新 | 保留旧版本，标记变更点 |<br />
+| BR-04 | 数据统计 | 每日定时 | 生成热门问题排行、未命中问题清单 |</p>
+<hr />
+<h3 id="23">2.3 非功能需求</h3>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>需求</th>
+<th>指标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>性能</strong></td>
+<td>API响应时间</td>
+<td>P95 &lt; 3秒（RAG检索+生成）</td>
+</tr>
+<tr>
+<td><strong>可用性</strong></td>
+<td>系统可用性</td>
+<td>≥ 99.5%</td>
+</tr>
+<tr>
+<td><strong>安全性</strong></td>
+<td>数据加密</td>
+<td>知识库内容加密存储</td>
+</tr>
+<tr>
+<td><strong>合规性</strong></td>
+<td>知识准确性</td>
+<td>政策回答准确率≥95%</td>
+</tr>
+<tr>
+<td><strong>可扩展性</strong></td>
+<td>知识库容量</td>
+<td>支持10万+文档片段</td>
+</tr>
+<tr>
+<td><strong>多租户</strong></td>
+<td>机构隔离</td>
+<td>不同机构知识库独立</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">三、数据流设计</h2>
+<h3 id="31">3.1 核心数据流</h3>
+<pre><code>┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│  企业微信/  │────▶│   API网关    │────▶│  后端服务    │
+│  管理后台   │     │  (鉴权/限流) │     │ (业务逻辑)   │
+└─────────────┘     └──────────────┘     └──────┬──────┘
+                                                │
+                     ┌──────────────────────────┘
+                     ▼
+              ┌──────────────┐     ┌─────────────┐
+              │  RAG检索引擎  │────▶│  向量数据库  │
+              │ (问题向量化   │     │  (pgvector) │
+              │  +相似度检索) │     └─────────────┘
+              └──────┬───────┘
+                     │
+                     ▼
+              ┌──────────────┐     ┌─────────────┐
+              │  LLM生成     │────▶│  业务数据库  │
+              │  (qwen-max)  │     │ (PostgreSQL) │
+              └──────────────┘     └─────────────┘
+</code></pre>
+<h3 id="32">3.2 知识库构建流程</h3>
+<pre><code>原始文档（PDF/Word/网页）
+    ↓
+文本提取（PyMuPDF/docling）
+    ↓
+文本清洗（去除页眉页脚、特殊符号）
+    ↓
+智能分割（按主题/章节，每段500-800字）
+    ↓
+向量化（text-embedding-3-small → 1536维）
+    ↓
+存入pgvector（带metadata：来源、日期、地区）
+    ↓
+定期更新（政策文件变更时重新索引）
+</code></pre>
+<h3 id="33">3.3 关键数据表设计</h3>
+<p><strong>documents表</strong>（知识库文档）：<br />
+| 字段 | 类型 | 说明 |<br />
+|------|------|------|<br />
+| doc_id | UUID | 主键 |<br />
+| title | VARCHAR(200) | 文档标题 |<br />
+| category | VARCHAR(50) | 分类（政策/产品/话术） |<br />
+| region | VARCHAR(50) | 地区（上海/北京/全国） |<br />
+| content | TEXT | 文档内容 |<br />
+| embedding | VECTOR(1536) | 向量嵌入 |<br />
+| source_file | VARCHAR(500) | 来源文件路径 |<br />
+| updated_at | TIMESTAMP | 更新时间 |<br />
+| is_published | BOOLEAN | 是否已发布 |</p>
+<p><strong>conversations表</strong>（对话记录）：<br />
+| 字段 | 类型 | 说明 |<br />
+|------|------|------|<br />
+| conversation_id | UUID | 主键 |<br />
+| user_id | UUID | 用户ID |<br />
+| question | TEXT | 用户提问 |<br />
+| answer | TEXT | AI回答 |<br />
+| retrieved_docs | JSONB | 检索到的文档列表 |<br />
+| rating | INT | 用户评分（1-5） |<br />
+| created_at | TIMESTAMP | 创建时间 |</p>
+<p><strong>knowledge_stats表</strong>（统计数据）：<br />
+| 字段 | 类型 | 说明 |<br />
+|------|------|------|<br />
+| stat_date | DATE | 统计日期 |<br />
+| total_queries | INT | 总查询次数 |<br />
+| avg_rating | DECIMAL | 平均评分 |<br />
+| top_questions | JSONB | 热门问题TOP10 |<br />
+| unanswerable_queries | INT | 未命中查询数 |</p>
+<hr />
+<h2 id="airag">四、AI模型选型与RAG设计</h2>
+<h3 id="41">4.1 模型选型</h3>
+<table>
+<thead>
+<tr>
+<th>用途</th>
+<th>模型</th>
+<th>理由</th>
+<th>成本估算</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>政策问答</td>
+<td>通义千问Qwen-Max</td>
+<td>中文理解强，适合政策解读</td>
+<td>~¥0.04/千token</td>
+</tr>
+<tr>
+<td>产品问答</td>
+<td>通义千问Qwen-Turbo</td>
+<td>成本低，速度快</td>
+<td>~¥0.001/千token</td>
+</tr>
+<tr>
+<td>话术生成</td>
+<td>通义千问Qwen-Plus</td>
+<td>平衡成本与质量</td>
+<td>~¥0.008/千token</td>
+</tr>
+<tr>
+<td>向量检索</td>
+<td>text-embedding-3-small</td>
+<td>中文效果好，成本低</td>
+<td>~¥0.0001/千token</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-rag">4.2 RAG检索策略</h3>
+<p><strong>混合检索</strong>：</p>
+<pre><code>用户提问 → 问题向量化 → 向量检索(Top-10) → BM25关键词检索(Top-10) → 融合排序 → Top-3 → 拼接Prompt → Qwen生成
+</code></pre>
+<p><strong>检索参数</strong>：<br />
+| 参数 | 值 | 说明 |<br />
+|------|------|------|<br />
+| Top-K（初筛） | 10 | 向量+关键词各取Top-10 |<br />
+| 相似度阈值 | 0.7 | 低于此值标记为"未找到" |<br />
+| 文档最大字数 | 2000字 | 超过则截断或摘要 |<br />
+| 重排序模型 | bge-reranker-large | 提高Top-K精度 |</p>
+<h3 id="43">4.3 核心提示词设计</h3>
+<p><strong>提示词1：政策问答（RAG场景）</strong></p>
+<pre><code>你是一个专业的养老政策顾问，名叫&quot;小银&quot;。你的服务对象是保险代理人和养老机构从业人员。
+
+请根据以下知识库信息回答用户的问题：
+&lt;knowledge_base&gt;
+{rag_retrieved_context}
+&lt;/knowledge_base&gt;
+
+回答要求：
+1. 使用清晰的结构化格式（分点列出）
+2. 引用来源文件名称和更新日期
+3. 如果知识库中没有相关信息，请说&quot;暂未查到相关政策，建议咨询当地XX部门&quot;
+4. 语气专业但不生硬，适合代理人直接转发给客户
+
+用户问题：{user_question}
+</code></pre>
+<p><strong>提示词2：产品对比</strong></p>
+<pre><code>你是一名养老产品专家。请根据以下产品信息，生成对比表格：
+
+&lt;product_info&gt;
+{rag_retrieved_context}
+&lt;/product_info&gt;
+
+要求：
+1. 对比维度：价格、位置、设施、服务、入住条件
+2. 用表格呈现，清晰直观
+3. 标注信息来源和更新日期
+4. 最后给出适用人群建议
+
+用户问题：{user_question}
+</code></pre>
+<h3 id="44-ai">4.4 AI评估指标</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>目标值</th>
+<th>评估方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>政策回答准确率</td>
+<td>≥ 95%</td>
+<td>人工抽检（每周200条）</td>
+</tr>
+<tr>
+<td>产品知识准确率</td>
+<td>≥ 98%</td>
+<td>与官方资料对比</td>
+</tr>
+<tr>
+<td>响应时间P95</td>
+<td>≤ 3秒</td>
+<td>APM监控</td>
+</tr>
+<tr>
+<td>用户满意度</td>
+<td>≥ 4.5/5.0</td>
+<td>每次回答后评分</td>
+</tr>
+<tr>
+<td>有用率</td>
+<td>≥ 90%</td>
+<td>用户标记"有用"比例</td>
+</tr>
+<tr>
+<td>幻觉率</td>
+<td>≤ 2%</td>
+<td>人工审核+自动化检测</td>
+</tr>
+<tr>
+<td>知识库覆盖率</td>
+<td>≥ 85%</td>
+<td>热门问题能被知识库覆盖的比例</td>
+</tr>
+<tr>
+<td>单次问答成本</td>
+<td>≤ ¥0.05</td>
+<td>API计费统计</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_4">五、页面/交互设计</h2>
+<h3 id="51">5.1 企业微信机器人界面</h3>
+<pre><code>┌─────────────────────────────────────────────┐
+│ 养老AI助手                                   │
+├─────────────────────────────────────────────┤
+│                                             │
+│  用户：上海长护险申请条件是什么？             │
+│                                             │
+│  小银：                                      │
+│  上海长护险申请条件如下：                     │
+│  1. 已参加本市基本医疗保险                   │
+│  2. 年满60周岁且居住在本市                   │
+│  3. 失能状态持续6个月以上                    │
+│  4. 经评估达到失能等级3-6级                 │
+│                                             │
+│  📄 来源：《上海市长期护理保险实施细则》      │
+│     2026年6月修订版                         │
+│                                             │
+│  需要了解申请流程吗？                        │
+│  [查看申请流程]  [对比其他地区政策]           │
+│                                             │
+└─────────────────────────────────────────────┘
+</code></pre>
+<h3 id="52">5.2 管理后台界面</h3>
+<pre><code>┌─────────────────────────────────────────────┐
+│ 养老AI助手 - 管理后台                        │
+├─────────────────────────────────────────────┤
+│  [知识库管理] [数据统计] [对话记录] [系统设置]│
+│                                             │
+│  知识库管理                                  │
+│  ┌─────────────────────────────────────┐    │
+│  │ 上传新文档                          │    │
+│  │ [选择文件] [拖拽文件到此处]          │    │
+│  │                                     │    │
+│  │ 文档分类：○政策 ○产品 ○话术         │    │
+│  │ 适用地区：○上海 ○北京 ○全国         │    │
+│  │                                     │    │
+│  │ [提交审核]                          │    │
+│  └─────────────────────────────────────┘    │
+│                                             │
+│  待审核文档（2）                             │
+│  ├─ 北京市长护险新政_20260710.pdf  [审核]   │
+│  └─ 泰康燕园价格调整_20260708.pdf  [审核]   │
+│                                             │
+│  已发布文档（156）                           │
+│  ├─ 上海长护险实施细则_20260615.pdf         │
+│  ├─ 泰康申园介绍_20260520.pdf               │
+│  └─ ...                                     │
+└─────────────────────────────────────────────┘
+</code></pre>
+<h3 id="53">5.3 数据统计看板</h3>
+<pre><code>本周数据概览（7/7-7/13）
+┌─────────────────────────────────────────┐
+│ 总查询次数：1,247                        │
+│ 平均评分：4.6/5.0                        │
+│ 有用率：92%                              │
+│ 未命中查询：23次（1.8%）                  │
+│ 平均响应时间：2.1秒                      │
+└─────────────────────────────────────────┘
+
+热门问题TOP5：
+1. 上海长护险申请条件（89次）
+2. 泰康申园和燕园区别（67次）
+3. 糖尿病老人能吃什么水果（54次）
+4. 异地就医怎么报销（48次）
+5. 客户说太贵了怎么回应（42次）
+</code></pre>
+<hr />
+<h2 id="_5">六、商业模式</h2>
+<h3 id="61">6.1 收入模型</h3>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>价格</th>
+<th>功能</th>
+<th>目标用户</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>免费版</td>
+<td>免费</td>
+<td>基础政策问答（每日20次）</td>
+<td>试用体验</td>
+</tr>
+<tr>
+<td>团队版</td>
+<td>¥199/月/人</td>
+<td>完整功能 + 不限次数</td>
+<td>小型代理团队</td>
+</tr>
+<tr>
+<td>机构版</td>
+<td>¥499/月/人</td>
+<td>团队版 + 知识库管理 + 数据分析</td>
+<td>保险经纪公司/养老机构</td>
+</tr>
+<tr>
+<td>私有化部署</td>
+<td>¥10万+/年</td>
+<td>本地部署 + 定制知识库 + 专属客服</td>
+<td>大型保险集团</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 获客策略</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>策略</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>种子期（0-100人）</td>
+<td>泰康内部代理人免费使用</td>
+<td>验证产品价值，收集反馈</td>
+</tr>
+<tr>
+<td>成长期（100-1000人）</td>
+<td>保险经纪公司合作推广</td>
+<td>拓展到同业机构</td>
+</tr>
+<tr>
+<td>扩张期（1000+人）</td>
+<td>行业会议+内容营销</td>
+<td>建立行业标杆</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">七、实施计划</h2>
+<h3 id="71-mvp3">7.1 MVP范围（3周）</h3>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>功能</th>
+<th>工期</th>
+<th>负责人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>政策问答（RAG）</td>
+<td>7天</td>
+<td>后端+AI</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>产品知识问答</td>
+<td>5天</td>
+<td>后端+AI</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>知识库管理后台</td>
+<td>5天</td>
+<td>前端+后端</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>企业微信机器人</td>
+<td>3天</td>
+<td>后端</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>数据统计看板</td>
+<td>2天</td>
+<td>后端</td>
+</tr>
+</tbody>
+</table>
+<p><strong>总计</strong>：约22个工作日（3-4周）</p>
+<h3 id="72">7.2 技术栈</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>选型</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前端</td>
+<td>Vue.js + Element Plus</td>
+<td>管理后台快速开发</td>
+</tr>
+<tr>
+<td>后端</td>
+<td>Node.js + NestJS</td>
+<td>与银发管家共用技术栈</td>
+</tr>
+<tr>
+<td>数据库</td>
+<td>PostgreSQL + TimescaleDB</td>
+<td>业务数据 + 对话日志</td>
+</tr>
+<tr>
+<td>向量检索</td>
+<td>pgvector</td>
+<td>RAG知识库语义检索</td>
+</tr>
+<tr>
+<td>AI推理</td>
+<td>通义千问Qwen-Max/Turbo</td>
+<td>中文理解强，成本低</td>
+</tr>
+<tr>
+<td>Embedding</td>
+<td>text-embedding-3-small</td>
+<td>中文效果好</td>
+</tr>
+<tr>
+<td>部署</td>
+<td>阿里云/腾讯云</td>
+<td>国内访问速度快</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-mvp">7.3 MVP验证计划</h3>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>目标</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>回答准确率</td>
+<td>≥ 90%</td>
+<td>人工抽检（100条标准问答）</td>
+</tr>
+<tr>
+<td>用户采纳率</td>
+<td>≥ 80%</td>
+<td>用户标记"有用"比例</td>
+</tr>
+<tr>
+<td>响应时间</td>
+<td>≤ 3秒</td>
+<td>APM监控</td>
+</tr>
+<tr>
+<td>日活用户</td>
+<td>≥ 50人</td>
+<td>企业微信后台统计</td>
+</tr>
+<tr>
+<td>验证周期</td>
+<td>2周</td>
+<td>泰康内部代理人试用</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_7">八、风险评估与应对</h2>
+<h3 id="81">8.1 风险矩阵</h3>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>概率</th>
+<th>影响</th>
+<th>等级</th>
+<th>应对策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>政策知识过期</td>
+<td>中</td>
+<td>高</td>
+<td>🔴</td>
+<td>设置知识库更新提醒，每周审核</td>
+</tr>
+<tr>
+<td>AI回答不准确</td>
+<td>低</td>
+<td>高</td>
+<td>🟠</td>
+<td>RAG严格限制回答范围，未找到时不编造</td>
+</tr>
+<tr>
+<td>代理人依赖AI</td>
+<td>中</td>
+<td>中</td>
+<td>🟡</td>
+<td>标注"仅供参考"，培养人工复核习惯</td>
+</tr>
+<tr>
+<td>知识库维护成本高</td>
+<td>高</td>
+<td>中</td>
+<td>🟠</td>
+<td>自动化文档解析+向量化，减少人工</td>
+</tr>
+<tr>
+<td>竞品模仿</td>
+<td>低</td>
+<td>低</td>
+<td>🟢</td>
+<td>积累使用数据和行业Know-how</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">九、附录</h2>
+<h3 id="91">9.1 术语表</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RAG</td>
+<td>Retrieval-Augmented Generation，检索增强生成</td>
+</tr>
+<tr>
+<td>pgvector</td>
+<td>PostgreSQL的向量扩展，用于语义检索</td>
+</tr>
+<tr>
+<td>Embedding</td>
+<td>将文本转换为向量的技术</td>
+</tr>
+<tr>
+<td>BM25</td>
+<td>传统的关键词检索算法</td>
+</tr>
+<tr>
+<td>Rerank</td>
+<td>重排序，对初筛结果进行精排</td>
+</tr>
+<tr>
+<td>CAC</td>
+<td>Customer Acquisition Cost，获客成本</td>
+</tr>
+<tr>
+<td>MAU</td>
+<td>Monthly Active Users，月活跃用户</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 关联文档</h3>
+<ul>
+<li><code>学习笔记/AI技术理解笔记.md</code> — AI技术基础学习</li>
+<li><code>作品集/银发管家产品PRD.md</code> — C端健康管理产品</li>
+<li><code>学习笔记/AI+养老案例/2026-07-09-养老AI助手应用场景分析-深度版.md</code> — 场景分析</li>
+</ul>
+<hr />
+<p><em>本文档为AI PM阶段三核心产出，基于银发管家PRD格式编写。</em><br />
+<em>适用场景：求职作品集、面试展示、团队评审</em></p>
+    <div class="footer">
+      📂 本页面由仲超独立产出 · 2026-08-20<br>
+      🏠 <a href="index.html">返回作品集首页</a> · 💼 定向岗位：墨帝教育·判判事业部
+    </div>
+  </main>
+</div>
+</body>
+</html>
