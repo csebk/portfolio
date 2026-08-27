@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 辅助问诊系统</title>
+  <script src="js/react.production.min.js"></script>
+  <script src="js/react-dom.production.min.js"></script>
+  <script src="js/babel.min.js"></script>
+  <script src="js/tailwind.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'med-blue': '#1890FF',
+            'med-blue-light': '#E6F7FF',
+            'ai-purple': '#722ED1',
+            'ai-purple-light': '#F9F0FF',
+            'status-green': '#52C41A',
+            'status-yellow': '#FAAD14',
+            'status-red': '#FF4D4F',
+            'bg-gray': '#F5F7FA',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .pulse-dot { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-bg-gray">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ========== 假数据（V2.0 · 诊疗流程状态机）==========
+    // 状态码 → 显示文案 + 颜色（详见 Demo 设计规划 V2.0 第四章）
+    const STATUS_META = {
+      pre_diagnosis:    { label: '🟡 预诊中',         color: 'text-status-yellow', bg: 'bg-status-yellow/10' },
+      registered:       { label: '🔵 已挂号',         color: 'text-med-blue',      bg: 'bg-med-blue/10' },
+      waiting:          { label: '🟠 候诊中',         color: 'text-status-yellow', bg: 'bg-status-yellow/10' },
+      consulting:       { label: '🟣 问诊中',         color: 'text-ai-purple',     bg: 'bg-ai-purple/10' },
+      awaiting_test:    { label: '🔵 待检查',         color: 'text-med-blue',      bg: 'bg-med-blue/10' },
+      test_pending_24h: { label: '🟠 待检查·超 24h',  color: 'text-status-red',    bg: 'bg-status-red/10' },
+      critical_value:   { label: '🔴 危急值',         color: 'text-status-red',    bg: 'bg-status-red/20' },
+      awaiting_rx:      { label: '🟢 报告中',         color: 'text-status-green',  bg: 'bg-status-green/10' },
+      dispensed:        { label: '✅ 已完成',         color: 'text-status-green',  bg: 'bg-status-green/10' },
+      followup_active:  { label: '🟢 随访中',         color: 'text-status-green',  bg: 'bg-status-green/10' },
+      recall_pending:   { label: '🟡 待复诊',         color: 'text-status-yellow', bg: 'bg-status-yellow/10' },
+      archived:         { label: '⚫ 已归档',         color: 'text-gray-500',      bg: 'bg-gray-100' },
+    };
+
+    const MOCK_PATIENTS = [
+      { id: 1, name: '王秀英', age: 65, gender: '女', phone: '138****5566', diagnosis: '急性支气管炎', allergy: ['青霉素'], risk: 'high', status: 'awaiting_test',    lastVisit: '10分钟前' },
+      { id: 2, name: '张楠',   age: 65, gender: '男', phone: '139****1234', diagnosis: '急性支气管炎', allergy: [],         risk: 'high', status: 'consulting',       lastVisit: '20分钟前' },
+      { id: 3, name: '展羽琳', age: 72, gender: '女', phone: '136****5678', diagnosis: '高血压',         allergy: [],         risk: 'low',  status: 'dispensed',        lastVisit: '1小时前' },
+      { id: 4, name: '胡玲玲', age: 54, gender: '女', phone: '135****9012', diagnosis: '糖尿病',         allergy: [],         risk: 'low',  status: 'waiting',          lastVisit: '2小时前' },
+      { id: 5, name: '刘美丽', age: 23, gender: '女', phone: '137****3456', diagnosis: '急性胃肠炎',     allergy: [],         risk: 'mid',  status: 'pre_diagnosis',    lastVisit: '—' },
+    ];
+
+    const MOCK_AI_DIAGNOSES = [
+      { name: '急性支气管炎', confidence: 78, severity: 'normal', reasoning: '主述咳嗽 3 天/夜咳 5 天，符合典型症状', source: 'xx院士团队模型' },
+      { name: '过敏性咳嗽', confidence: 45, severity: 'normal', reasoning: '夜咳频率较长，可能与过敏原有关', source: 'xx院士团队模型', needsMoreInfo: true },
+      { name: '胃食管反流病', confidence: 32, severity: 'normal', reasoning: '需进一步检查方可确认', source: 'xx院士团队模型', needsMoreInfo: true },
+    ];
+
+    const MOCK_FOLLOWUP_PATIENTS = [
+      { id: 1, name: '王秀英', age: 65, risk: 'high',   riskCount: 2, status: 'critical_value',  lastAI: '10分钟前' },
+      { id: 2, name: '张楠',   age: 65, risk: 'high',   riskCount: 2, status: 'followup_active', lastAI: '20分钟前' },
+      { id: 3, name: '展羽琳', age: 72, risk: 'low',    riskCount: 0, status: 'followup_active', lastAI: '1小时前' },
+      { id: 4, name: '胡玲玲', age: 54, risk: 'low',    riskCount: 0, status: 'followup_active', lastAI: '2小时前' },
+      { id: 5, name: '刘美丽', age: 23, risk: 'mid',    riskCount: 1, status: 'recall_pending',  lastAI: '—' },
+    ];
+
+    // ========== 通用组件 ==========
+    const TopNav = ({ current }) => (
+      <div className="bg-med-blue text-white px-6 py-3 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-6">
+          <div className="text-lg font-bold">AI 辅助问诊系统</div>
+          <div className="flex gap-4 text-sm">
+            <a className="hover:underline cursor-pointer text-ai-purple-light font-medium" onClick={() => location.hash = '#/pre-diagnosis'}>🤖 AI 预诊</a>
+            <a className="hover:underline cursor-pointer" onClick={() => location.hash = '#/dashboard'}>工作台</a>
+            <a className="hover:underline cursor-pointer">挂号</a>
+            <a className="hover:underline cursor-pointer">门诊</a>
+            <a className="hover:underline cursor-pointer" onClick={() => location.hash = '#/followup'}>患者随访</a>
+            <a className="hover:underline cursor-pointer">库存</a>
+            <a className="hover:underline cursor-pointer" onClick={() => location.hash = '#/stats'}>运营统计</a>
+            <a className="hover:underline cursor-pointer" onClick={() => location.hash = '#/demo/error'}>异常演示</a>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="bg-white/20 px-2 py-1 rounded">AI 辅助问诊系统联盟001号店</span>
+          <span>张文华 医生</span>
+        </div>
+      </div>
+    );
+
+    const Card = ({ children, className = '' }) => (
+      <div className={`bg-white rounded-xl shadow-sm p-4 ${className}`}>{children}</div>
+    );
+
+    const Button = ({ children, color = 'blue', onClick, className = '' }) => {
+      const colors = {
+        blue: 'bg-med-blue text-white hover:bg-blue-600',
+        red: 'bg-status-red text-white hover:bg-red-600',
+        green: 'bg-status-green text-white hover:bg-green-600',
+        white: 'bg-white text-med-blue border border-med-blue hover:bg-med-blue-light',
+        yellow: 'bg-status-yellow text-white hover:bg-yellow-600',
+      };
+      return <button onClick={onClick} className={`px-4 py-2 rounded-lg font-medium transition-colors ${colors[color]} ${className}`}>{children}</button>;
+    };
+
+    // ========== P1 登录页 ==========
+    const LoginPage = () => {
+      const [clinic, setClinic] = useState('AI 辅助问诊系统联盟001号店');
+      const [phone, setPhone] = useState('doctor@001');
+      const [password, setPassword] = useState('123456');
+      const [role, setRole] = useState('医生');
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-med-blue-light to-ai-purple-light flex items-center justify-center p-6">
+          <Card className="w-full max-w-md">
+            <div className="text-center mb-6">
+              <div className="text-2xl font-bold text-med-blue mb-1">AI 辅助问诊系统</div>
+              <div className="text-sm text-ai-purple">智能辅助 · 数据驱动</div>
+              <div className="text-xs text-gray-500 mt-2">国内 75 位院士专家团队数据模型</div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">选择诊所</label>
+                <select value={clinic} onChange={(e) => setClinic(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                  <option>AI 辅助问诊系统联盟001号店</option>
+                  <option>AI 辅助问诊系统联盟002号店</option>
+                  <option>AI 辅助问诊系统联盟003号店</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">手机号</label>
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">密码</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">角色</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-1">
+                    <input type="radio" checked={role === '医生'} onChange={() => setRole('医生')} /> 医生
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <input type="radio" checked={role === '院长'} onChange={() => setRole('院长')} /> 院长
+                  </label>
+                </div>
+              </div>
+
+              <Button className="w-full" onClick={() => location.hash = '#/dashboard'}>登录</Button>
+
+              <div className="text-center text-xs text-gray-400 mt-4">
+                测试账号已预填 · 任意密码可登录
+              </div>
+
+              <div className="mt-4 text-center">
+                <div className="text-xs text-gray-400 mb-2">━━━ 没账号？演示患者端 ━━━</div>
+                <button onClick={() => location.hash = '#/pre-diagnosis'} className="w-full border-2 border-ai-purple/30 bg-ai-purple-light text-ai-purple rounded-lg py-2 text-sm font-medium hover:bg-ai-purple hover:text-white transition">
+                  🤖 试试 AI 预诊演示（患者端）
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      );
+    };
+
+    // ========== P2 工作台首页 ==========
+    const DashboardPage = () => (
+      <div>
+        <TopNav current="dashboard" />
+        <div className="p-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            {[
+              { label: '今日接诊', value: '8', color: 'med-blue', icon: '📋' },
+              { label: '待处理', value: '3', color: 'status-yellow', icon: '⏰' },
+              { label: '高风险', value: '1', color: 'status-red', icon: '⚠️' },
+              { label: '复诊', value: '5', color: 'status-green', icon: '🔄' },
+            ].map((s, i) => (
+              <Card key={i}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-gray-500">{s.label}</div>
+                    <div className={`text-3xl font-bold text-${s.color}`}>{s.value}</div>
+                  </div>
+                  <div className="text-3xl">{s.icon}</div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-5 gap-4 mb-6">
+            {[
+              { label: 'AI 预诊演示', hash: '#/pre-diagnosis', icon: '🤖', color: 'bg-ai-purple-light border-2 border-ai-purple/30' },
+              { label: '开始接诊', hash: '#/emr/new', icon: '➕' },
+              { label: '患者随访', hash: '#/followup', icon: '👥' },
+              { label: '运营统计', hash: '#/stats', icon: '📊' },
+              { label: '异常演示', hash: '#/demo/error', icon: '⚠️' },
+            ].map((q, i) => (
+              <button key={i} onClick={() => location.hash = q.hash} className={`rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow text-center ${q.color || 'bg-white'}`}>
+                <div className="text-4xl mb-2">{q.icon}</div>
+                <div className={`font-medium ${i === 0 ? 'text-ai-purple' : ''}`}>{q.label}</div>
+                {i === 0 && <div className="text-xs text-ai-purple mt-1">患者端演示</div>}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-status-red/10 border border-status-red rounded-lg p-3 mb-4 flex items-center justify-between">
+            <div className="text-status-red font-medium">🔴 1 位高风险患者待处理：王秀英 体温 39.3°C</div>
+            <Button color="red" onClick={() => location.hash = '#/followup/patient/1'}>立即查看</Button>
+          </div>
+
+          <Card>
+            <h3 className="font-bold mb-3">最近患者</h3>
+            <table className="w-full text-sm">
+              <thead className="text-gray-500 border-b">
+                <tr>
+                  <th className="text-left py-2">姓名</th>
+                  <th className="text-left">年龄</th>
+                  <th className="text-left">诊断</th>
+                  <th className="text-left">状态</th>
+                  <th className="text-left">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MOCK_PATIENTS.map(p => (
+                  <tr key={p.id} className="border-b hover:bg-gray-50">
+                    <td className="py-2 font-medium">{p.name}</td>
+                    <td>{p.age}</td>
+                    <td>{p.diagnosis}</td>
+                    <td>
+                      {(() => { const m = STATUS_META[p.status] || { label: p.status, color: 'text-gray-500' }; return <span className={`${m.color} text-xs px-2 py-0.5 rounded ${m.bg||''}`}>{m.label}</span>; })()}
+                    </td>
+                    <td>
+                      <button onClick={() => location.hash = '#/emr/new'} className="text-med-blue hover:underline">查看</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </div>
+      </div>
+    );
+
+    // 🆕 V2.0.2 完整疾病库（医生手动选诊断用）
+    const MOCK_DISEASE_LIBRARY = [
+      // 呼吸
+      { cat: '呼吸', name: '急性支气管炎' },
+      { cat: '呼吸', name: '肺炎' },
+      { cat: '呼吸', name: '支气管哮喘' },
+      { cat: '呼吸', name: '过敏性咳嗽' },
+      { cat: '呼吸', name: '上呼吸道感染' },
+      // 消化
+      { cat: '消化', name: '急性胃肠炎' },
+      { cat: '消化', name: '胃食管反流病' },
+      { cat: '消化', name: '消化性溃疡' },
+      { cat: '消化', name: '慢性胃炎' },
+      // 心血管
+      { cat: '心血管', name: '高血压' },
+      { cat: '心血管', name: '冠心病' },
+      { cat: '心血管', name: '心律失常' },
+      // 内分泌
+      { cat: '内分泌', name: '2 型糖尿病' },
+      { cat: '内分泌', name: '甲状腺功能亢进' },
+      { cat: '内分泌', name: '高脂血症' },
+      // 神经
+      { cat: '神经', name: '紧张性头痛' },
+      { cat: '神经', name: '失眠症' },
+      { cat: '神经', name: '焦虑状态' },
+      // 皮肤
+      { cat: '皮肤', name: '湿疹' },
+      { cat: '皮肤', name: '荨麻疹' },
+      { cat: '皮肤', name: '带状疱疹' },
+      // 其他
+      { cat: '其他', name: '普通感冒' },
+      { cat: '其他', name: '流行性感冒' },
+      { cat: '其他', name: '尿路感染' },
+      { cat: '其他', name: '急性扁桃体炎' },
+    ];
+
+    // ========== P3 接诊中（V2.0.2 增强版·左 7/右 5 + 8 改合一）==========
+    // 📋 PRD 追溯：本组件对应 PRD §3.3 页面 P3 + §6 模块 6（AI 诊断）+ §3 模块 3（语音转写）
+    //                + §4 模块 4（诊中分流）+ §7 模块 7（处方过敏冲突）
+    // 关联用户故事：US-MID-001（语音）/ US-MID-004（采纳粒度）/ US-MID-005（诊中分流）
+    //                / US-MID-006（检查回流）/ US-MID-007（结果关联）/ US-MID-009（边界 24h）
+    // 改本组件前必看：PRD V2.0 末尾"📺 demo 演示路径"小节
+    const EMREditPage = () => {
+      const [symptoms, setSymptoms] = useState(['咳嗽', '咳痰', '发热', '乏力']);
+      const [aiLoading, setAiLoading] = useState(false);
+      const [aiResult, setAiResult] = useState(null);
+      // 🆕 V2.0.2 状态
+      const [recording, setRecording] = useState(false);
+      const [recordSec, setRecordSec] = useState(0);
+      const [transcribing, setTranscribing] = useState(false);
+      // 预诊带入
+      const [chiefComplaint, setChiefComplaint] = useState('咳嗽 3 天，伴发热 38.5°C');
+      const [presentIllness, setPresentIllness] = useState('3 天前受凉后出现阵发性咳嗽，夜间加重，影响睡眠，伴有黄色粘痰，体温最高 38.7°C。');
+      // 🆕 诊断疾病（接受 AI 自动填 / 手动选）
+      const [diagnoses, setDiagnoses] = useState([]);
+      const [showDiseasePicker, setShowDiseasePicker] = useState(false);
+      const [customTestInput, setCustomTestInput] = useState('');
+      // 决策与处方
+      const [actions, setActions] = useState({ 0: '采纳', 1: '忽略', 2: '忽略' });
+      const [selectedTests, setSelectedTests] = useState(new Set(['血常规', 'CRP']));
+      const [customTests, setCustomTests] = useState([]);
+      const [showTestModal, setShowTestModal] = useState(false);
+      const [showRxModal, setShowRxModal] = useState(false);
+      const [showFollowupModal, setShowFollowupModal] = useState(false);
+      // 🆕 V2.0.3 PRD 追溯气泡
+      const [showPRDTrace, setShowPRDTrace] = useState(false);
+
+      useEffect(() => {
+        if (!recording) return;
+        const t = setInterval(() => setRecordSec(s => s + 1), 1000);
+        return () => clearInterval(t);
+      }, [recording]);
+
+      const startRecording = () => { setRecording(true); setRecordSec(0); };
+      const stopRecording = () => {
+        setRecording(false);
+        setTranscribing(true);
+        setTimeout(() => {
+          setChiefComplaint('咳嗽 3 天，伴发热 38.5°C，夜咳加重');
+          setPresentIllness('3 天前受凉后出现阵发性咳嗽，夜间加重影响睡眠，伴黄色粘痰，体温最高 38.7°C，伴气短。');
+          setTranscribing(false);
+        }, 1800);
+      };
+
+      // 🆕 AI 采纳 → 自动填诊断疾病
+      const acceptAiDiagnosis = (name) => {
+        if (!diagnoses.includes(name)) setDiagnoses([...diagnoses, name]);
+      };
+      const removeDiagnosis = (name) => setDiagnoses(diagnoses.filter(x => x !== name));
+
+      // 🆕 自定义检查项
+      const addCustomTest = () => {
+        if (customTestInput.trim()) {
+          setCustomTests([...customTests, customTestInput.trim()]);
+          setCustomTestInput('');
+        }
+      };
+
+      const allSymptoms = ['咳嗽', '咳痰', '发热', '乏力', '头痛', '鼻塞', '流涕', '咽痛', '气短', '胸痛', '腹痛', '腹泻', '便秘', '呕吐', '食欲减退', '失眠', '心悸', '出汗', '体重下降', '水肿', '皮疹', '瘙痒', '关节痛', '腰痛', '尿频', '尿急', '尿痛', '便血', '呕血', '咳血'];
+      const allSigns = ['呼吸音延长', '肺部湿啰音', '肺部干啰音', '咽部充血', '扁桃体肿大', '淋巴结肿大', '肝脾肿大', '腹部压痛', '反跳痛', '肌紧张', '皮疹', '黄疸', '水肿', '紫绀', '苍白', '脱水征', '心律不齐', '心脏杂音', '血压升高', '血压降低'];
+      const recommendedTests = [
+        { name: '血常规', code: 'CBC', urgency: '常规', reason: '评估感染情况' },
+        { name: 'C-反应蛋白', code: 'CRP', urgency: '常规', reason: '评估炎症程度' },
+        { name: '胸部 X 光', code: 'CXR', urgency: '常规', reason: '排除肺炎' },
+        { name: '降钙素原', code: 'PCT', urgency: '可选', reason: '鉴别细菌/病毒感染' },
+        { name: '血气分析', code: 'ABG', urgency: '可选', reason: '评估氧合' },
+      ];
+
+      const triggerAI = () => {
+        setAiLoading(true);
+        setTimeout(() => {
+          setAiLoading(false);
+          setAiResult(MOCK_AI_DIAGNOSES);
+        }, 1800);
+      };
+
+      return (
+        <div>
+          <TopNav />
+          <div className="p-4 max-w-[1600px] mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold">🩺 接诊中 - 王秀英 <span className="text-sm text-gray-500 font-normal ml-2">65岁 · 女 · 急性支气管炎</span></h2>
+              <div className="flex items-center gap-2 text-xs">
+                {/* 🆕 V2.0.3 PRD 追溯气泡 */}
+                <div className="relative">
+                  <button onClick={() => setShowPRDTrace(!showPRDTrace)} className="bg-ai-purple-light border border-ai-purple/40 text-ai-purple rounded-full px-3 py-1 hover:bg-ai-purple hover:text-white transition text-xs font-medium">
+                    💡 PRD 追溯
+                  </button>
+                  {showPRDTrace && (
+                    <div className="absolute right-0 top-full mt-1 w-80 bg-white border-2 border-ai-purple/30 rounded-xl shadow-xl p-3 z-50 text-left">
+                      <div className="font-bold text-ai-purple text-sm mb-2">📋 本页对应 PRD 章节</div>
+                      <div className="space-y-1.5 text-[11px]">
+                        <div className="p-1.5 bg-gray-50 rounded">
+                          <div className="font-medium text-gray-700">§3.3 接诊中页面布局</div>
+                          <div className="text-gray-500">7:5 分栏 / 5 区段 / 一页式不跳页</div>
+                        </div>
+                        <div className="p-1.5 bg-gray-50 rounded">
+                          <div className="font-medium text-gray-700">§3.5 语音转写（US-MID-001）</div>
+                          <div className="text-gray-500">1 次开/1 次关 / 关闭后 1.8s 转写</div>
+                        </div>
+                        <div className="p-1.5 bg-gray-50 rounded">
+                          <div className="font-medium text-gray-700">§6.4 AI 诊断（US-MID-003）</div>
+                          <div className="text-gray-500">手动触发 / Top 3 / 文字按钮</div>
+                        </div>
+                        <div className="p-1.5 bg-gray-50 rounded">
+                          <div className="font-medium text-gray-700">§6.5 采纳粒度（US-MID-004）</div>
+                          <div className="text-gray-500">采纳自动填诊断疾病 / 忽略 / 复制</div>
+                        </div>
+                        <div className="p-1.5 bg-gray-50 rounded">
+                          <div className="font-medium text-gray-700">§4.5 诊中分流（US-MID-005）</div>
+                          <div className="text-gray-500">号源释放 / 24h 超时 / 自定义检查</div>
+                        </div>
+                        <div className="p-1.5 bg-gray-50 rounded">
+                          <div className="font-medium text-gray-700">§7.5 处方过敏（US-MID-008）</div>
+                          <div className="text-gray-500">实时拦截 / 青霉素→头孢克肟</div>
+                        </div>
+                        <div className="p-1.5 bg-gray-50 rounded">
+                          <div className="font-medium text-gray-700">§8.5 随访（US-MID-010）</div>
+                          <div className="text-gray-500">基于诊断自动配 5 任务</div>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-2 border-t text-[10px] text-gray-500">
+                        📖 详见 PRD V2.0 末尾"📺 demo 演示路径"小节
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <span className="bg-ai-purple-light text-ai-purple px-3 py-1 rounded-full">📋 预诊摘要已带入</span>
+                <span className="bg-status-yellow/10 text-status-yellow px-3 py-1 rounded-full">⏱️ 接诊 03:24</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-12 gap-3">
+              {/* 左 7/12：病历 + 诊断 + 检查 + 处方（7 改合一）*/}
+              <div className="col-span-7 space-y-3">
+                <Card>
+                  <h3 className="font-bold mb-2 text-sm">👤 患者信息（自动带入）</h3>
+                  <div className="grid grid-cols-4 gap-2 text-xs">
+                    <div><span className="text-gray-500">姓名</span><div className="font-medium">王秀英</div></div>
+                    <div><span className="text-gray-500">年龄</span><div className="font-medium">65</div></div>
+                    <div><span className="text-gray-500">性别</span><div className="font-medium">女</div></div>
+                    <div><span className="text-gray-500">过敏史</span><div className="font-medium text-status-red">⚠️ 青霉素</div></div>
+                  </div>
+                </Card>
+
+                {/* 🆕 审 6：过敏高风险警示条 */}
+                <div className="bg-status-red/10 border-2 border-status-red rounded-lg p-2.5 text-xs flex items-center gap-2">
+                  <span className="text-2xl">⚠️</span>
+                  <div>
+                    <div className="font-bold text-status-red">过敏高风险患者</div>
+                    <div className="text-gray-700">已确认 <strong>青霉素</strong> 过敏，开方时将实时拦截同类药物</div>
+                  </div>
+                </div>
+
+                <Card>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-sm">📝 主诉与现病史</h3>
+                    <div className="flex items-center gap-2">
+                      {recording ? (
+                        <button onClick={stopRecording} className="flex items-center gap-2 bg-status-red text-white rounded-full px-3 py-1.5 text-xs">
+                          <span className="w-2 h-2 bg-white rounded-full pulse-dot" />
+                          接诊录音中 · {String(Math.floor(recordSec/60)).padStart(2,'0')}:{String(recordSec%60).padStart(2,'0')} · 点 1 次关闭
+                        </button>
+                      ) : transcribing ? (
+                        <div className="flex items-center gap-1 bg-ai-purple-light border border-ai-purple/30 text-ai-purple rounded-full px-3 py-1.5 text-xs">
+                          <span className="spin">⏳</span> AI 正在转写...
+                        </div>
+                      ) : (
+                        // 📋 PRD §3.5 规则 [1 次开/1 次关] - US-MID-001
+                        <button onClick={startRecording} className="flex items-center gap-1 bg-med-blue text-white rounded-full px-3 py-1.5 text-xs">
+                          🎙️ 开始接诊录音
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-xs text-gray-500">主诉 * <span className="text-ai-purple">· 预诊带入 · 可修改</span></label>
+                      <textarea value={chiefComplaint} onChange={e => setChiefComplaint(e.target.value)} className="w-full border rounded-lg px-2 py-1.5 text-sm" rows="1" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">现病史 * <span className="text-ai-purple">· 预诊带入 · 可修改</span></label>
+                      <textarea value={presentIllness} onChange={e => setPresentIllness(e.target.value)} className="w-full border rounded-lg px-2 py-1.5 text-sm" rows="2" />
+                    </div>
+                  </div>
+                </Card>
+
+                <Card>
+                  <h3 className="font-bold mb-2 text-sm">🩺 症状采集（已选 {symptoms.length}）</h3>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {allSymptoms.slice(0, 16).map(s => (
+                      <button key={s} onClick={() => setSymptoms(symptoms.includes(s) ? symptoms.filter(x => x !== s) : [...symptoms, s])} className={`px-2 py-0.5 rounded-full text-xs ${symptoms.includes(s) ? 'bg-med-blue text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>{s}</button>
+                    ))}
+                  </div>
+                  <h3 className="font-bold mb-1.5 text-sm">👆 体征采集</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allSigns.slice(0, 10).map(s => (
+                      <button key={s} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 hover:bg-gray-200">{s}</button>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* 🆕 改 3：诊断疾病字段（接受 AI 自动填 + 手动选）*/}
+                <Card>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-sm">🩺 诊断疾病 <span className="text-xs text-gray-500">（{diagnoses.length} 项）</span></h3>
+                    <button onClick={() => setShowDiseasePicker(true)} className="bg-med-blue text-white rounded-lg px-2.5 py-1 text-xs">+ 添加疾病</button>
+                  </div>
+                  {diagnoses.length === 0 ? (
+                    <div className="text-xs text-gray-500 p-3 bg-gray-50 rounded text-center">💡 右侧点 AI "采纳" 自动填，或点"添加疾病"手动选</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {diagnoses.map((d, i) => (
+                        <span key={i} className="bg-med-blue text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
+                          {d} <span className="cursor-pointer opacity-70 hover:opacity-100" onClick={() => removeDiagnosis(d)}>✕</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+
+                {/* 🆕 改 3：推荐检查移左栏（处方上方）*/}
+                <Card>
+                  <h3 className="font-bold mb-2 text-sm">📋 推荐检查 <span className="text-xs text-gray-500">（已选 {selectedTests.size + customTests.length} 项）</span></h3>
+                  <div className="space-y-1 mb-2">
+                    {recommendedTests.map((t, i) => (
+                      <label key={i} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-gray-50 p-1 rounded">
+                        <input type="checkbox" checked={selectedTests.has(t.name)} onChange={() => { const n = new Set(selectedTests); n.has(t.name) ? n.delete(t.name) : n.add(t.name); setSelectedTests(n); }} className="w-3 h-3" />
+                        <span className="flex-1">{t.name}</span>
+                        <span className={`text-[10px] px-1.5 rounded ${t.urgency === '常规' ? 'bg-med-blue-light text-med-blue' : 'bg-gray-100'}`}>{t.urgency}</span>
+                      </label>
+                    ))}
+                    {/* 🆕 自定义检查项 */}
+                    {customTests.map((ct, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs p-1 bg-status-green/5 border border-status-green/30 rounded">
+                        <span className="flex-1">✏️ {ct}</span>
+                        <span className="text-[10px] px-1.5 rounded bg-status-green/20 text-status-green">自定义</span>
+                        <span className="cursor-pointer text-gray-400 hover:text-status-red" onClick={() => setCustomTests(customTests.filter(x => x !== ct))}>✕</span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* 🆕 自定义输入框 */}
+                  <div className="flex gap-1 mb-2">
+                    <input value={customTestInput} onChange={e => setCustomTestInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCustomTest()} placeholder="自定义检查项（如心肌酶谱）..." className="flex-1 border rounded px-2 py-1 text-xs" />
+                    <button onClick={addCustomTest} className="bg-status-green text-white rounded px-2 py-1 text-xs">+ 添加</button>
+                  </div>
+                  {/* 📋 PRD §4.5 规则 [检查号源释放/可自定义] - US-MID-005 */}
+                  <button onClick={() => setShowTestModal(true)} className="w-full bg-med-blue text-white rounded-lg py-1.5 text-xs font-medium">🩺 开检查单（{selectedTests.size + customTests.length} 项）· 诊中分流</button>
+                </Card>
+
+                {/* 处方与医嘱 - 📋 PRD §7.5 规则 [过敏冲突实时警告] - US-MID-008 */}
+                <Card>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-sm">💊 处方与医嘱</h3>
+                    <button onClick={() => setShowRxModal(true)} className="bg-med-blue text-white rounded-lg px-3 py-1.5 text-xs font-medium">💊 开方（弹窗）→</button>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2">点击"开方"在弹窗中完成（过敏冲突实时警告）</div>
+                </Card>
+
+                {/* 🆕 审 3：AI 处置建议汇总（移自右栏）*/}
+                <Card>
+                  <h3 className="font-bold mb-2 text-sm">💡 AI 处置建议汇总</h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2 bg-med-blue-light border border-med-blue/30 rounded">
+                      <div className="font-medium text-med-blue mb-0.5">推荐药物</div>
+                      <div>阿莫西林 500mg TID × 7 天 → <span className="text-status-red">⚠️ 过敏 → 改头孢克肟</span></div>
+                    </div>
+                    <div className="p-2 bg-status-green/5 border border-status-green/30 rounded">
+                      <div className="font-medium text-status-green mb-0.5">非药物医嘱</div>
+                      <div className="text-gray-700">• 多饮水，保持空气湿润  • 避免烟雾粉尘  • 注意休息  • 症状加重立即复诊</div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* 🆕 审 4：底部三按钮并排 - 📋 PRD §8.5 规则 [基于诊断自动配 5 任务] - US-MID-010 */}
+                <div className="flex gap-2 pt-2">
+                  <Button color="white" className="flex-1">📝 保存草稿</Button>
+                  <Button color="white" onClick={() => setShowRxModal(true)} className="flex-1">💊 开方（弹窗）</Button>
+                  <Button onClick={() => setShowFollowupModal(true)} className="flex-1">✅ 完成接诊 →</Button>
+                </div>
+              </div>
+
+              {/* 右 5/12：AI 诊断（精简：删"治疗方案"卡片）*/}
+              <div className="col-span-5 space-y-3">
+                {/* 🆕 审 2：AI 触发按钮移到卡片顶部 - 📋 PRD §6.5 规则 [手动触发 AI] - US-MID-003 */}
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm flex items-center gap-1"><span className="text-ai-purple">🤖</span> AI 辅助诊断</h3>
+                  <button onClick={triggerAI} disabled={aiLoading} className="bg-ai-purple text-white rounded-lg px-3 py-1.5 text-xs disabled:opacity-50 font-medium">
+                    {aiLoading ? '⏳ AI 推理中...' : '🤖 触发 AI 诊断'}
+                  </button>
+                </div>
+
+                <Card>
+                  {!aiLoading && !aiResult && (
+                    <div className="text-xs text-gray-500 p-4 bg-gray-50 rounded text-center">
+                      💡 录完主诉/现病史后点上方"🤖 触发 AI 诊断"<br />系统将给出 Top 3 疑似诊断
+                    </div>
+                  )}
+                  {aiLoading && (
+                    <div className="p-4 text-center">
+                      <div className="spin inline-block w-6 h-6 border-3 border-ai-purple border-t-transparent rounded-full mb-2"></div>
+                      <div className="text-xs text-gray-600">AI 推理中...</div>
+                      <div className="text-[10px] text-gray-400 mt-1">xx 院士团队模型</div>
+                    </div>
+                  )}
+                  {aiResult && (
+                    <div>
+                      <div className="text-[10px] text-ai-purple mb-2">⭐ xx 院士团队 AI 模型 · 点"采纳"自动填入左侧诊断</div>
+                      <div className="space-y-2">
+                        {aiResult.map((d, i) => (
+                          <div key={i} className={`p-2.5 rounded-lg border ${i === 0 ? 'border-med-blue bg-med-blue-light' : 'border-gray-200'}`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-xs">{i + 1}. {d.name}</span>
+                              <span className="text-xs text-med-blue font-bold">{d.confidence}%</span>
+                            </div>
+                            <div className="text-[10px] text-gray-600 mb-2">{d.reasoning}</div>
+                            {/* 🆕 审 5：按钮文案化 - 📋 PRD §6.5 规则 [采纳粒度] - US-MID-004 */}
+                            <div className="flex gap-1">
+                              <button onClick={() => { setActions({...actions, [i]: '采纳'}); acceptAiDiagnosis(d.name); }} className={`flex-1 px-2 py-1 rounded text-[10px] font-medium ${actions[i]==='采纳' ? 'bg-med-blue text-white' : 'bg-gray-100 text-gray-700'}`}>✓ 采纳</button>
+                              <button onClick={() => setActions({...actions, [i]: '忽略'})} className={`flex-1 px-2 py-1 rounded text-[10px] font-medium ${actions[i]==='忽略' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>✕ 忽略</button>
+                              <button onClick={() => setActions({...actions, [i]: '复制'})} className={`flex-1 px-2 py-1 rounded text-[10px] font-medium ${actions[i]==='复制' ? 'bg-ai-purple text-white' : 'bg-gray-100 text-gray-700'}`}>⎘ 复制</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            </div>
+          </div>
+
+          {/* 疾病选择弹窗（审 7）*/}
+          {showDiseasePicker && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-5 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                <h3 className="text-lg font-bold mb-3">🩺 选择诊断疾病</h3>
+                <div className="space-y-3">
+                  {Array.from(new Set(MOCK_DISEASE_LIBRARY.map(d => d.cat))).map(cat => (
+                    <div key={cat}>
+                      <div className="text-xs text-gray-500 mb-1">📂 {cat}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {MOCK_DISEASE_LIBRARY.filter(d => d.cat === cat).map((d, i) => {
+                          const sel = diagnoses.includes(d.name);
+                          return (
+                            <button key={i} onClick={() => sel ? removeDiagnosis(d.name) : setDiagnoses([...diagnoses, d.name])} className={`px-3 py-1 rounded-full text-xs ${sel ? 'bg-med-blue text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>
+                              {sel ? '✓ ' : ''}{d.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 p-2 bg-gray-50 rounded text-xs">
+                  <div className="text-gray-500 mb-1">✏️ 找不到？自定义：</div>
+                  <input id="customDiag" placeholder="输入自定义疾病名..." className="w-full border rounded px-2 py-1 text-xs" />
+                  <button onClick={() => { const v = document.getElementById('customDiag').value.trim(); if (v && !diagnoses.includes(v)) { setDiagnoses([...diagnoses, v]); document.getElementById('customDiag').value = ''; } }} className="mt-1 w-full bg-med-blue text-white rounded py-1 text-xs">+ 添加自定义</button>
+                </div>
+                <div className="flex gap-2 justify-end mt-4">
+                  <Button color="white" onClick={() => setShowDiseasePicker(false)}>取消</Button>
+                  <Button onClick={() => setShowDiseasePicker(false)}>确认（{diagnoses.length} 项）</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 检查单弹窗 */}
+          {showTestModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-5 max-w-md w-full">
+                <h3 className="text-lg font-bold mb-2">🩺 开检查单 · 诊中分流</h3>
+                <div className="text-sm text-gray-600 mb-2">已选 {selectedTests.size + customTests.length} 项：</div>
+                <ul className="text-sm space-y-1 mb-3">
+                  {[...selectedTests].map((t, i) => <li key={i}>• {t}</li>)}
+                  {customTests.map((t, i) => <li key={'c'+i}>• ✏️ {t} <span className="text-xs text-status-green">（自定义）</span></li>)}
+                </ul>
+                <div className="text-xs text-ai-purple bg-ai-purple-light border border-ai-purple/20 rounded p-2 mb-3">💡 诊中分流：检查单开出后释放号源，结果自动回传工作台。</div>
+                <div className="flex gap-2 justify-end">
+                  <Button color="white" onClick={() => setShowTestModal(false)}>取消</Button>
+                  <Button onClick={() => { setShowTestModal(false); alert('✅ 检查单已开出！号源已释放。'); }}>确认开出</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 处方弹窗 */}
+          {showRxModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-5 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                <h3 className="text-lg font-bold mb-3">💊 处方开具 - 王秀英</h3>
+                <div className="bg-med-blue-light border-l-4 border-med-blue p-2 mb-3 text-xs">
+                  <strong>王秀英</strong> · 65岁 · 女 · 急性支气管炎 <span className="ml-2 text-status-red">⚠️ 青霉素过敏</span>
+                </div>
+                <div className="bg-status-red/10 border-2 border-status-red rounded-lg p-3 mb-3">
+                  <div className="font-bold text-status-red text-sm mb-1">⚠️ 过敏冲突警告</div>
+                  <div className="text-xs">患者 <strong>青霉素过敏</strong>，所选药品 <strong>阿莫西林</strong>（青霉素类）可能引发严重过敏反应。<br /><strong>建议：</strong>改用头孢克肟 200mg BID 7 天</div>
+                </div>
+                <div className="mb-3">
+                  <input placeholder="扫条码 / 输药品名 / 拼音首字母..." className="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <table className="w-full text-sm mb-3">
+                  <thead className="text-xs text-gray-500 border-b"><tr><th className="text-left py-1.5">药品</th><th className="text-left">规格</th><th className="text-left">用法</th><th>备注</th></tr></thead>
+                  <tbody><tr className="border-b"><td className="py-2 font-medium">头孢克肟</td><td>200mg</td><td>BID</td><td><span className="text-status-green text-xs">✓ 已切换</span></td></tr></tbody>
+                </table>
+                <textarea placeholder="医嘱..." className="w-full border rounded-lg px-3 py-2 text-sm mb-3" rows="2" defaultValue="多饮水，注意休息，避免接触烟雾粉尘。如症状加重立即复诊。" />
+                <div className="flex gap-2 justify-end">
+                  <Button color="white" onClick={() => setShowRxModal(false)}>取消</Button>
+                  <Button onClick={() => { setShowRxModal(false); alert('✅ 处方已提交'); }}>提交处方</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 随访配置弹窗 */}
+          {showFollowupModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-5 max-w-md w-full">
+                <h3 className="text-lg font-bold mb-3">📅 AI 随访配置</h3>
+                <div className="text-xs text-gray-500 mb-3">基于诊断"急性支气管炎"自动配置：</div>
+                <div className="space-y-2 mb-4">
+                  {['D+3 症状自评', 'D+7 咳嗽缓解度', 'D+14 复诊提醒', '用药反馈', '并发症监测'].map((t, i) => (
+                    <label key={i} className="flex items-center gap-2 text-sm p-2 border rounded">
+                      <input type="checkbox" defaultChecked className="w-4 h-4" />
+                      <span className="flex-1">{t}</span>
+                      <span className="text-xs text-ai-purple">🤖 推荐</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button color="white" onClick={() => setShowFollowupModal(false)}>取消</Button>
+                  <Button onClick={() => { setShowFollowupModal(false); alert('✅ 接诊完成！患者进入随访阶段'); location.hash = '#/dashboard'; }}>完成接诊</Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // ========== P5 处方页（核心·过敏冲突）==========
+    const PrescriptionPage = () => {
+      const [showAllergyAlert, setShowAllergyAlert] = useState(true);
+      const [drug, setDrug] = useState('阿莫西林 500mg TID 7 天');
+
+      return (
+        <div>
+          <TopNav />
+          <div className="p-6 max-w-5xl mx-auto">
+            <h2 className="text-xl font-bold mb-4">💊 处方开具 - 王秀英</h2>
+
+            <div className="bg-med-blue-light border-l-4 border-med-blue p-3 mb-4 flex items-center justify-between text-sm">
+              <div>
+                <strong>王秀英</strong> · 65岁 · 女 · 急性支气管炎
+                <span className="ml-3 text-status-red">⚠️ 青霉素过敏</span>
+              </div>
+            </div>
+
+            {showAllergyAlert && (
+              <div className="bg-status-red/10 border-2 border-status-red rounded-lg p-4 mb-4 flex items-start gap-3">
+                <div className="text-3xl">⚠️</div>
+                <div className="flex-1">
+                  <div className="font-bold text-status-red mb-1">过敏冲突警告</div>
+                  <div className="text-sm">
+                    患者 <strong>青霉素过敏</strong>，所选药品 <strong>阿莫西林</strong>（青霉素类）可能引发严重过敏反应。
+                    <br /><strong>建议：</strong>改用头孢克肟 200mg BID 7 天（头孢类抗生素，过敏风险低）。
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button color="red" onClick={() => { setDrug('头孢克肟 200mg BID 7 天'); setShowAllergyAlert(false); }}>改为头孢克肟</Button>
+                    <Button color="white" onClick={() => setShowAllergyAlert(false)}>继续使用阿莫西林（自负责任）</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Card>
+              <div className="flex gap-2 mb-4 border-b">
+                <button className="px-4 py-2 border-b-2 border-med-blue text-med-blue font-medium">中西成药</button>
+                <button className="px-4 py-2 text-gray-500">输液</button>
+                <button className="px-4 py-2 text-gray-500">中药</button>
+              </div>
+
+              <div className="mb-4">
+                <input placeholder="扫条码 / 输药品名 / 拼音首字母 / 自定义编码..." className="w-full border rounded-lg px-3 py-2" />
+              </div>
+
+              <table className="w-full mb-4">
+                <thead className="text-sm text-gray-500 border-b">
+                  <tr>
+                    <th className="text-left py-2">药品</th>
+                    <th className="text-left">规格</th>
+                    <th className="text-left">用法</th>
+                    <th className="text-left">天数</th>
+                    <th className="text-left">备注</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-3 font-medium">{drug.split(' ')[0]}</td>
+                    <td>{drug.split(' ')[1]}</td>
+                    <td>{drug.split(' ')[2]}</td>
+                    <td>{drug.split(' ')[3]}</td>
+                    <td>
+                      {!showAllergyAlert && drug.includes('阿莫西林') && <span className="text-status-red text-xs">⚠️ 过敏</span>}
+                      {drug.includes('头孢克肟') && <span className="text-status-green text-xs">✓ 已切换</span>}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="mb-4">
+                <label className="text-sm text-gray-600">医嘱事项</label>
+                <textarea placeholder="请输入医嘱..." className="w-full border rounded-lg px-3 py-2 mt-1" rows="3" defaultValue="注意休息，多饮水，清淡饮食，避免接触烟雾粉尘。如症状加重或出现呼吸困难立即复诊。" />
+              </div>
+
+              <div className="flex justify-between">
+                <Button color="white">保存草稿</Button>
+                <Button onClick={() => location.hash = '#/followup-config'}>完成接诊 →</Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      );
+    };
+
+    // ========== P6 AI 随访配置弹窗（核心）==========
+    const FollowupConfigPage = () => (
+      <div className="min-h-screen bg-black/50 flex items-center justify-center p-6">
+        <Card className="w-full max-w-2xl">
+          <h2 className="text-xl font-bold mb-4">📅 为患者定制随访方案</h2>
+          <div className="text-sm text-gray-500 mb-4">王秀英 · 65岁 · 急性支气管炎</div>
+
+          <div className="bg-ai-purple-light border-l-4 border-ai-purple p-3 mb-4 text-sm">
+            ⭐ <strong>由 xx 院士团队模型生成</strong>，医生可根据情况调整
+          </div>
+
+          <div className="mb-4">
+            <label className="text-sm font-medium block mb-2">随访模式</label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input type="radio" defaultChecked /> ✅ AI 随访
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" /> 人工随访
+              </label>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="text-sm font-medium block mb-2">随访时间窗</label>
+            <div className="flex items-center gap-2 text-sm">
+              <span>2026-08-27</span>
+              <span>~</span>
+              <span>2026-09-10</span>
+              <span className="text-gray-500">（14 天）</span>
+            </div>
+            <label className="flex items-center gap-2 mt-2 text-sm">
+              <input type="checkbox" /> 是否重点关注？
+            </label>
+          </div>
+
+          <h3 className="font-bold mb-3">5 大随访任务</h3>
+          <div className="space-y-2 mb-4">
+            {[
+              { name: '① 恢复情况监测', enabled: true, freq: '2 天 1 次', extra: '急性支气管炎' },
+              { name: '② 用药反馈', enabled: true, freq: '1 天 1 次', extra: '头孢克肟' },
+              { name: '③ 资讯推荐', enabled: true, freq: '2 天 1 次', extra: '支气管炎护理' },
+              { name: '④ 数据指标上传', enabled: true, freq: '1 天 3 次', extra: '体温（饭后）' },
+              { name: '⑤ 复诊提醒', enabled: true, freq: '1 次', extra: '2026-09-08' },
+            ].map((t, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" defaultChecked={t.enabled} />
+                  <span className="font-medium">{t.name}</span>
+                </div>
+                <div className="text-gray-500">{t.freq} · {t.extra}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button color="white" onClick={() => location.hash = '#/dashboard'}>取消</Button>
+            <Button onClick={() => alert('随访方案已启动！\n患者将在微信小程序收到首次提醒。')} onClickCapture={() => {}}>确定启动</Button>
+          </div>
+        </Card>
+      </div>
+    );
+
+    // ========== P7 随访工作台（核心）==========
+    const FollowupPage = () => (
+      <div>
+        <TopNav />
+        <div className="p-6 max-w-7xl mx-auto">
+          <h2 className="text-xl font-bold mb-4">👥 随访工作台</h2>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex gap-1">
+              {['8月19', '8月20', '8月21', '8月22', '8月23', '8月24', '8月25', '8月26', '8月27'].map((d, i) => (
+                <button key={i} className={`px-3 py-1 rounded text-sm ${d === '8月27' ? 'bg-med-blue text-white' : 'bg-white hover:bg-gray-50'}`}>{d}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 mb-4 border-b">
+            <button className="px-4 py-2 border-b-2 border-med-blue text-med-blue font-medium">AI 随访 (59)</button>
+            <button className="px-4 py-2 text-gray-500">人工随访 (12)</button>
+          </div>
+
+          <Card>
+            <table className="w-full text-sm">
+              <thead className="text-gray-500 border-b">
+                <tr>
+                  <th className="text-left py-2">姓名</th>
+                  <th className="text-left">年龄</th>
+                  <th className="text-left">风险</th>
+                  <th className="text-left">AI 检测</th>
+                  <th className="text-left">状态</th>
+                  <th className="text-left">最后 AI 随访</th>
+                  <th className="text-left">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MOCK_FOLLOWUP_PATIENTS.map(p => (
+                  <tr key={p.id} className={`border-b hover:bg-gray-50 ${p.risk === 'high' ? 'bg-status-red/5' : ''}`}>
+                    <td className="py-2 font-medium">
+                      {p.risk === 'high' && <span className="text-status-red">⭐</span>}
+                      {' '}{p.name}
+                    </td>
+                    <td>{p.age}</td>
+                    <td>
+                      {p.risk === 'high' && <span className="text-status-red">🔴 高</span>}
+                      {p.risk === 'mid' && <span className="text-status-yellow">🟡 中</span>}
+                      {p.risk === 'low' && <span className="text-status-green">🟢 低</span>}
+                    </td>
+                    <td>{p.riskCount} 个风险项</td>
+                    <td>
+                      {(() => { const m = STATUS_META[p.status] || { label: p.status, color: 'text-gray-500' }; return <span className={`${m.color} text-xs px-2 py-0.5 rounded ${m.bg||''}`}>{m.label}</span>; })()}
+                    </td>
+                    <td className="text-gray-500">{p.lastAI}</td>
+                    <td>
+                      <button onClick={() => location.hash = `#/followup/patient/${p.id}`} className="text-med-blue hover:underline">查看</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+
+          <div className="mt-4">
+            <Button color="blue">🔔 一键提醒今日未响应人员</Button>
+          </div>
+        </div>
+      </div>
+    );
+
+    // ========== P8 AI 风险详情页（核心）==========
+    const RiskDetailPage = () => (
+      <div>
+        <TopNav />
+        <div className="p-6 max-w-7xl mx-auto">
+          <h2 className="text-xl font-bold mb-4">⚠️ AI 风险详情 - 王秀英</h2>
+
+          <div className="bg-med-blue-light border-l-4 border-med-blue p-3 mb-4 flex items-center justify-between">
+            <div>
+              <strong>王秀英</strong> · 65岁 · 女 · ID: 18789323242
+              <div className="text-sm text-gray-600 mt-1">急性支气管炎 · 第 2 次随访 · 10 分钟前在线</div>
+            </div>
+            <div className="bg-status-red text-white px-3 py-1 rounded-full text-sm font-medium">
+              ⚠️ AI 检测 2 处风险
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            {/* 中间：聊天框 */}
+            <div className="col-span-2">
+              <Card>
+                <h3 className="font-bold mb-3">患者反馈</h3>
+                <div className="space-y-3 mb-4">
+                  <div className="bg-med-blue-light p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">症状恢复自评</div>
+                    <div className="text-sm">症状有缓解，但恢复有所缓慢</div>
+                    <div className="text-xs text-gray-400 mt-1">来源：xx院士团队的 AI 模型</div>
+                  </div>
+                  <div className="bg-status-red/10 p-3 rounded-lg border border-status-red">
+                    <div className="text-xs text-status-red mb-1">⚠️ 用药反馈</div>
+                    <div className="text-sm">整体未按时用药，2 种药物用药有偏差</div>
+                    <ul className="text-xs mt-2 space-y-1 text-gray-600">
+                      <li>• 头孢克肟：日服剂量偏低，影响效果</li>
+                      <li>• 抗生素：未按时服用</li>
+                    </ul>
+                  </div>
+                  <div className="bg-status-red/10 p-3 rounded-lg border border-status-red">
+                    <div className="text-xs text-status-red mb-1">⚠️ 数据指标反馈</div>
+                    <div className="text-sm">体温 2 次数据上报接近 39°C</div>
+                    <div className="text-xs text-gray-600 mt-1">39.3°C / 18:00 · 39.5°C / 12:00</div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h3 className="font-bold mb-2">AI 医生对话（湛华医生）</h3>
+                  <div className="bg-med-blue-light p-3 rounded-lg mb-3">
+                    <div className="text-sm mb-2">你好，我是你在中心医院就诊的湛华医生...</div>
+                    <div className="text-sm mb-2">📋 症状分析：</div>
+                    <ol className="text-sm space-y-1 ml-4 list-decimal">
+                      <li>症状改善但恢复较慢</li>
+                      <li>可能原因：药物频次低 / 饮食缺蔬菜水果 / 年龄大体质弱</li>
+                      <li>体温异常 → 警惕二次感染</li>
+                    </ol>
+                    <div className="text-sm mt-2">💡 建议：多喝水、清淡饮食、5 天不缓解就医</div>
+                  </div>
+                  <div className="bg-white border rounded-lg p-3 flex items-center gap-3">
+                    <div className="text-2xl">💊</div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">999 感冒灵颗粒</div>
+                      <div className="text-xs text-gray-500">8.00 元/盒 · 建议备用</div>
+                    </div>
+                    <Button color="white">查看</Button>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-4 border-t pt-4">
+                  <Button color="red">⛔ 终止 AI 随访</Button>
+                  <Button color="white">💬 发送回访</Button>
+                  <Button color="white">💊 开药</Button>
+                  <Button color="white">📄 生成报告</Button>
+                </div>
+              </Card>
+            </div>
+
+            {/* 右侧：风险详情 */}
+            <div>
+              <Card>
+                <h3 className="font-bold mb-3 flex items-center gap-2">
+                  <span className="text-med-blue">🤖</span> AI 辅助问诊
+                </h3>
+                <div className="text-xs text-gray-500 mb-3">国内 75 位院士专家团队数据模型</div>
+
+                <div className="border-t pt-3 mb-3">
+                  <div className="font-medium text-sm mb-2">患者随访异常项 (2)</div>
+                  <div className="text-xs space-y-1 text-gray-600">
+                    <div>• 体温持续偏高（39°C+）</div>
+                    <div>• 用药依从性差</div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-3 mb-3">
+                  <div className="font-medium text-sm mb-2">随访结论与建议</div>
+                  <div className="bg-status-yellow/10 p-2 rounded text-xs mb-2">
+                    症状有缓解，但需关注发烧交叉感染
+                  </div>
+                  <div className="text-xs text-gray-600 mb-2">可能原因：</div>
+                  <ol className="text-xs space-y-1 ml-4 list-decimal text-gray-600">
+                    <li>药物频次低</li>
+                    <li>饮食不均衡</li>
+                    <li>年龄大体质弱</li>
+                    <li>体温异常 → 警惕感染</li>
+                  </ol>
+                </div>
+
+                <div className="border-t pt-3 text-xs text-gray-500">
+                  💡 本系统提供的所有信息供医生在诊疗过程中参考，<strong>决定权属于医生</strong>。
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // ========== P9 院长统计页 ==========
+    const StatsPage = () => (
+      <div>
+        <TopNav />
+        <div className="p-6 max-w-7xl mx-auto">
+          <h2 className="text-xl font-bold mb-4">📊 运营统计</h2>
+
+          <div className="grid grid-cols-5 gap-4 mb-6">
+            {[
+              { label: '今日接诊', value: '156', color: 'med-blue' },
+              { label: 'AI 采纳率', value: '67%', color: 'ai-purple' },
+              { label: '复诊率', value: '32%', color: 'status-green' },
+              { label: '响应率', value: '78%', color: 'status-yellow' },
+              { label: '高风险', value: '12', color: 'status-red' },
+            ].map((s, i) => (
+              <Card key={i}>
+                <div className="text-sm text-gray-500">{s.label}</div>
+                <div className={`text-2xl font-bold text-${s.color} mt-1`}>{s.value}</div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <h3 className="font-bold mb-3">近 7 天接诊量</h3>
+              <div className="h-40 flex items-end gap-2">
+                {[120, 135, 142, 138, 156, 148, 156].map((v, i) => (
+                  <div key={i} className="flex-1 bg-med-blue rounded-t" style={{ height: `${v/2}%` }}>
+                    <div className="text-xs text-center -mt-5">{v}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <span>周一</span><span>周二</span><span>周三</span><span>周四</span>
+                <span>周五</span><span>周六</span><span>周日</span>
+              </div>
+            </Card>
+
+            <Card>
+              <h3 className="font-bold mb-3">医生 AI 采纳率分布</h3>
+              <div className="space-y-2">
+                {[
+                  { name: '张文华', rate: 78 },
+                  { name: '李雪梅', rate: 65 },
+                  { name: '王建国', rate: 72 },
+                  { name: '陈志远', rate: 58 },
+                  { name: '赵丽华', rate: 81 },
+                ].map((d, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <div className="w-20">{d.name}</div>
+                    <div className="flex-1 bg-gray-100 rounded-full h-4 relative">
+                      <div className="bg-ai-purple h-4 rounded-full" style={{ width: `${d.rate}%` }}></div>
+                      <div className="text-xs text-center absolute inset-0">{d.rate}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <Card className="mt-4">
+            <h3 className="font-bold mb-3">最近风险事件</h3>
+            <table className="w-full text-sm">
+              <thead className="text-gray-500 border-b">
+                <tr>
+                  <th className="text-left py-2">时间</th>
+                  <th className="text-left">患者</th>
+                  <th className="text-left">风险类型</th>
+                  <th className="text-left">严重度</th>
+                  <th className="text-left">处置</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b"><td className="py-2">10 分钟前</td><td>王秀英</td><td>体温 39.3°C</td><td><span className="text-status-red">🔴 高</span></td><td>已介入</td></tr>
+                <tr className="border-b"><td className="py-2">20 分钟前</td><td>张楠</td><td>用药偏差</td><td><span className="text-status-yellow">🟡 中</span></td><td>已提醒</td></tr>
+                <tr className="border-b"><td className="py-2">1 小时前</td><td>刘美丽</td><td>未响应</td><td><span className="text-status-yellow">🟡 中</span></td><td>已提醒</td></tr>
+              </tbody>
+            </table>
+          </Card>
+        </div>
+      </div>
+    );
+
+    // ========== P10 异常演示页 ==========
+    const ErrorDemoPage = () => (
+      <div>
+        <TopNav />
+        <div className="p-6 max-w-5xl mx-auto">
+          <h2 className="text-xl font-bold mb-4">⚠️ 异常场景演示</h2>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <h3 className="font-bold mb-3">场景 1：AI 模型宕机</h3>
+              <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <div className="text-4xl mb-2">🤖</div>
+                <div className="text-gray-500">AI 暂时不可用</div>
+                <div className="text-sm text-gray-400 mt-1">请按经验判断</div>
+              </div>
+              <div className="text-xs text-gray-500 mt-2">触发：推理接口 5xx 错误</div>
+            </Card>
+
+            <Card>
+              <h3 className="font-bold mb-3">场景 2：推理超时</h3>
+              <div className="bg-gray-100 rounded-lg p-6 text-center">
+                <div className="spin inline-block w-8 h-8 border-4 border-ai-purple border-t-transparent rounded-full mb-2"></div>
+                <div className="text-gray-500">AI 思考中，请稍候</div>
+                <div className="text-sm text-gray-400 mt-1">已等待 8.2 秒</div>
+              </div>
+              <div className="text-xs text-gray-500 mt-2">触发：API 延迟 &gt; 3s</div>
+            </Card>
+
+            <Card>
+              <h3 className="font-bold mb-3">场景 3：低置信度（&lt; 30%）</h3>
+              <div className="bg-status-yellow/10 border-l-4 border-status-yellow rounded-lg p-4">
+                <div className="text-sm text-status-yellow font-medium mb-2">⚠️ AI 不确定</div>
+                <div className="text-xs text-gray-600">
+                  AI 推理置信度过低（Top 1 &lt; 30%），建议医生结合临床经验判断。
+                </div>
+                <div className="text-xs text-gray-500 mt-2">仅展示 2-5 位疑似诊断</div>
+              </div>
+              <div className="text-xs text-gray-500 mt-2">触发：Top 1 置信度 &lt; 30%</div>
+            </Card>
+
+            <Card>
+              <h3 className="font-bold mb-3">场景 4：过敏冲突 ⭐ 重点</h3>
+              <div className="bg-status-red/10 border-2 border-status-red rounded-lg p-4">
+                <div className="text-sm text-status-red font-bold mb-2">⚠️ 过敏冲突警告</div>
+                <div className="text-xs text-gray-700 mb-2">
+                  患者 <strong>青霉素过敏</strong>，AI 推荐 <strong>阿莫西林</strong>，可能引发严重过敏反应。
+                </div>
+                <div className="text-xs text-gray-600">✅ 建议改用：头孢克肟</div>
+              </div>
+              <div className="text-xs text-gray-500 mt-2">触发：AI 推荐药物含过敏成分</div>
+            </Card>
+          </div>
+
+          <div className="mt-6 text-center">
+            <Button color="white" onClick={() => location.hash = '#/dashboard'}>返回工作台</Button>
+          </div>
+        </div>
+      </div>
+    );
+
+    // ========== 🆕 V2.0 P-2 患者预诊（手机壳 UI）==========
+    const PhoneFrame = ({ children }) => (
+      <div className="min-h-screen bg-gradient-to-br from-med-blue-light to-ai-purple-light flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden flex" style={{ width: 1366, height: 800 }}>
+          {/* 左侧：大屏一体机说明 */}
+          <div className="w-80 bg-gradient-to-b from-med-blue to-med-blue/80 text-white p-6 flex flex-col">
+            <div className="text-xs opacity-70 mb-2">一体机模式</div>
+            <div className="text-2xl font-bold mb-1">AI 预诊一体机</div>
+            <div className="text-xs opacity-80 mb-6">基层诊所·医保已配</div>
+            <div className="text-sm font-medium mb-2">💡 演示说明</div>
+            <ul className="text-xs opacity-90 space-y-2 leading-relaxed">
+              <li>• 右侧为患者手机 UI</li>
+              <li>• V2.0 一套代码两形态</li>
+              <li>• 一体机落地快（医保已配）</li>
+              <li>• App 推到 V2.1</li>
+            </ul>
+            <div className="mt-auto text-xs opacity-60">© 2026 AI 辅助问诊</div>
+          </div>
+          {/* 右侧：手机壳 */}
+          <div className="flex-1 flex items-center justify-center bg-bg-gray">
+            <div className="bg-black rounded-[40px] p-3 shadow-2xl" style={{ width: 410, height: 740 }}>
+              <div className="bg-white rounded-[32px] overflow-hidden h-full flex flex-col relative">
+                {children}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const PreDiagnosisPage = () => {
+      const [text, setText] = useState('咳嗽 3 天，伴有发烧 38.5°C');
+      const [optIn, setOptIn] = useState(false);
+      return (
+        <PhoneFrame>
+          {/* 顶栏 */}
+          <div className="bg-med-blue text-white px-4 py-3 flex items-center justify-between">
+            <span>←</span>
+            <span className="font-medium">AI 辅助问诊</span>
+            <span className="text-xs">⚙️</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* 🆕 V2.0.2 未登录入口卡（删"验证码"独立入口，与手机号合并）*/}
+            <div className="bg-status-yellow/10 border border-status-yellow/30 rounded-xl p-3 text-xs">
+              <div className="font-medium text-status-yellow mb-2">👋 未登录？2 种方式快速开始</div>
+              <div className="grid grid-cols-2 gap-2">
+                <button className="bg-white border border-status-yellow/40 rounded-lg p-2 hover:bg-status-yellow/20 transition">
+                  <div className="text-lg">📱</div>
+                  <div className="text-[10px] mt-1">扫码登录</div>
+                </button>
+                <button className="bg-white border border-status-yellow/40 rounded-lg p-2 hover:bg-status-yellow/20 transition">
+                  <div className="text-lg">📞</div>
+                  <div className="text-[10px] mt-1">手机号 + 验证码</div>
+                </button>
+              </div>
+            </div>
+
+            {/* 档案 opt-in */}
+            <div className={`border-2 rounded-xl p-3 cursor-pointer transition ${optIn ? 'border-med-blue bg-med-blue-light' : 'border-gray-200'}`} onClick={() => setOptIn(!optIn)}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">📋 带入我的健康档案</div>
+                  <div className="text-xs text-gray-500 mt-1">既往史·过敏史·慢性病</div>
+                </div>
+                <div className={`w-10 h-6 rounded-full ${optIn ? 'bg-med-blue' : 'bg-gray-300'} relative transition`}>
+                  <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition ${optIn ? 'left-4' : 'left-0.5'}`} />
+                </div>
+              </div>
+            </div>
+
+            {/* 主诉输入 */}
+            <div>
+              <div className="text-sm font-medium mb-2">请描述您的不适：</div>
+              <textarea value={text} onChange={e => setText(e.target.value)} className="w-full border border-gray-300 rounded-xl p-3 text-sm" rows="4" placeholder="例如：咳嗽 3 天，伴有黄色痰..." />
+              <div className="flex gap-2 mt-2">
+                <button className="flex-1 border border-gray-300 rounded-lg py-2 text-xs">🎙️ 语音输入</button>
+                <button className="flex-1 border border-gray-300 rounded-lg py-2 text-xs">📷 拍照</button>
+              </div>
+            </div>
+
+            {/* 急症提示 */}
+            <div className="bg-status-red/10 border border-status-red/30 rounded-xl p-3 text-xs text-status-red">
+              ⚠️ 胸痛·呼吸困难·意识模糊？请直接拨打 <strong>120</strong> 或前往急诊
+            </div>
+
+            {/* 主按钮 */}
+            <button onClick={() => location.hash = '#/pre-diagnosis/chat'} className="w-full bg-med-blue text-white rounded-xl py-3 font-medium">
+              开始 AI 预诊 →
+            </button>
+
+            <div className="text-xs text-gray-400 text-center pt-2">
+              AI 预诊仅供参考，不替代医生诊断
+            </div>
+          </div>
+        </PhoneFrame>
+      );
+    };
+
+    // ========== 🆕 V2.0 P-1 AI 追问 ==========
+    const PreDiagnosisChatPage = () => {
+      const [round, setRound] = useState(1);
+      const messages = [
+        { role: 'ai', text: '您好，我是 AI 预诊助手。请描述您哪里不舒服？' },
+        { role: 'user', text: '咳嗽 3 天，伴有发烧 38.5°C' },
+        { role: 'ai', text: '咳嗽有痰吗？痰是什么颜色？' },
+        { role: 'user', text: '有痰，黄色粘稠' },
+        { role: 'ai', text: '呼吸时会喘吗？胸闷吗？' },
+        { role: 'user', text: '有一点点气短' },
+        { role: 'ai', text: '好的，基于您的描述（咳嗽 3 天+黄痰+38.5°C+气短），AI 预判您可能患 <strong>急性支气管炎</strong>，建议挂 <strong>呼吸内科/内科</strong>。是否挂号？' },
+      ];
+      return (
+        <PhoneFrame>
+          <div className="bg-med-blue text-white px-4 py-3 flex items-center">
+            <span className="cursor-pointer" onClick={() => location.hash = '#/pre-diagnosis'}>←</span>
+            <span className="font-medium ml-3">AI 预诊对话</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-bg-gray">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${
+                  m.role === 'user' ? 'bg-med-blue text-white rounded-tr-sm' : 'bg-ai-purple-light text-gray-800 rounded-tl-sm border border-ai-purple/20'
+                }`} dangerouslySetInnerHTML={{ __html: m.text }} />
+              </div>
+            ))}
+            <div className="text-center text-xs text-gray-400 my-2">— AI 已完成 3 轮追问 —</div>
+          </div>
+          <div className="border-t p-3 bg-white">
+            <button onClick={() => location.hash = '#/register'} className="w-full bg-med-blue text-white rounded-xl py-3 font-medium">
+              确认并挂号 →
+            </button>
+          </div>
+        </PhoneFrame>
+      );
+    };
+
+    // ========== 🆕 V2.0.1 P0 挂号确认（先医院→再科室→再医生）==========
+    const RegisterPage = () => {
+      const [step, setStep] = useState(1); // 1=医院 2=科室 3=医生
+      const [hospital, setHospital] = useState(null);
+      const [dept, setDept] = useState(null);
+      const [doctor, setDoctor] = useState(null);
+
+      const hospitals = [
+        { id: 1, name: '示例诊所联盟001号店', addr: '上海市浦东新区张江路 100 号', distance: '0.8km', partner: '医保定点' },
+        { id: 2, name: '示例诊所联盟002号店', addr: '上海市浦东新区金桥路 200 号', distance: '2.3km', partner: '医保定点' },
+        { id: 3, name: '示例诊所联盟003号店', addr: '上海市浦东新区花木路 300 号', distance: '4.1km', partner: '医保定点' },
+      ];
+      const departments = [
+        { id: 1, name: '呼吸内科', desc: '咳嗽·哮喘·肺炎' },
+        { id: 2, name: '内科', desc: '综合常见病' },
+        { id: 3, name: '全科', desc: '基础诊疗' },
+      ];
+      const doctors = [
+        { id: 1, name: '张文华', title: '呼吸内科·副主任医师', time: '今天 14:30', dept: '呼吸内科' },
+        { id: 2, name: '李明', title: '内科·主治医师', time: '今天 15:00', dept: '内科' },
+        { id: 3, name: '王芳', title: '全科·主治医师', time: '明天 09:00', dept: '全科' },
+        { id: 4, name: '陈静', title: '呼吸内科·主治医师', time: '今天 16:00', dept: '呼吸内科' },
+      ];
+
+      return (
+        <PhoneFrame>
+          <div className="bg-med-blue text-white px-4 py-3 flex items-center">
+            <span className="cursor-pointer" onClick={() => step === 1 ? location.hash = '#/pre-diagnosis/chat' : setStep(step - 1)}>←</span>
+            <span className="font-medium ml-3">挂号确认 · 第 {step}/3 步</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* 预诊摘要卡片 */}
+            <div className="bg-ai-purple-light border border-ai-purple/30 rounded-xl p-3">
+              <div className="text-xs text-ai-purple font-medium mb-1">🤖 AI 预诊摘要</div>
+              <div className="text-sm text-gray-700">疑似 <strong>急性支气管炎</strong>，建议挂 <strong>呼吸内科/内科</strong></div>
+              <div className="text-xs text-gray-500 mt-1">置信度 82% · 3 轮追问</div>
+            </div>
+
+            {/* 步骤指示器 */}
+            <div className="flex items-center justify-between text-xs">
+              {[1, 2, 3].map(s => (
+                <div key={s} className="flex items-center gap-1">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${s < step ? 'bg-med-blue text-white' : s === step ? 'bg-med-blue text-white' : 'bg-gray-200 text-gray-500'}`}>{s < step ? '✓' : s}</div>
+                  <span className={s === step ? 'font-medium text-med-blue' : 'text-gray-500'}>{s === 1 ? '选医院' : s === 2 ? '选科室' : '选医生'}</span>
+                  {s < 3 && <span className="text-gray-300 mx-1">→</span>}
+                </div>
+              ))}
+            </div>
+
+            {/* Step 1 医院 */}
+            {step === 1 && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium mb-1">📍 选择就诊医院</div>
+                {hospitals.map((h, i) => (
+                  <div key={i} onClick={() => { setHospital(h); setStep(2); }} className={`border-2 rounded-xl p-3 cursor-pointer ${i === 0 ? 'border-med-blue bg-med-blue-light' : 'border-gray-200'}`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="text-sm font-medium">🏥 {h.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">📍 {h.addr}</div>
+                        <div className="text-xs text-med-blue mt-1">📏 {h.distance} · ✅ {h.partner}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Step 2 科室 */}
+            {step === 2 && hospital && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium mb-1">📍 已选医院：{hospital.name}</div>
+                <div className="text-sm font-medium mb-1">🩺 选择就诊科室</div>
+                {departments.map((d, i) => (
+                  <div key={i} onClick={() => { setDept(d); setStep(3); }} className={`border-2 rounded-xl p-3 cursor-pointer ${i === 0 ? 'border-med-blue bg-med-blue-light' : 'border-gray-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium">{d.name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{d.desc}</div>
+                      </div>
+                      {i === 0 && <div className="text-med-blue text-xs">🤖 AI 推荐</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Step 3 医生 */}
+            {step === 3 && dept && (
+              <div className="space-y-2">
+                <div className="text-xs text-gray-500">📍 {hospital?.name} · 🩺 {dept?.name}</div>
+                <div className="text-sm font-medium mb-1">👨‍⚕️ 选择就诊医生</div>
+                {doctors.filter(d => !dept || d.dept === dept.name || dept.name === '全科').map((d, i) => (
+                  <div key={i} onClick={() => { setDoctor(d); }} className={`border-2 rounded-xl p-3 cursor-pointer ${doctor?.id === d.id ? 'border-med-blue bg-med-blue-light' : 'border-gray-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium">{d.name} 医生</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{d.title}</div>
+                        <div className="text-xs text-med-blue mt-1">🕒 {d.time}</div>
+                      </div>
+                      {doctor?.id === d.id && <div className="text-med-blue">✓</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 底部按钮 */}
+            {step === 3 && doctor && (
+              <button onClick={() => { alert('挂号成功！候诊号 A008'); location.hash = '#/dashboard'; }} className="w-full bg-med-blue text-white rounded-xl py-3 font-medium">
+                确认挂号 · {doctor.name} 医生
+              </button>
+            )}
+          </div>
+        </PhoneFrame>
+      );
+    };
+
+    // ========== 🆕 V2.0 P0.5 危急值详情 ==========
+    const CriticalValuePage = () => {
+      const [read, setRead] = useState(false);
+      return (
+        <div className="min-h-screen bg-bg-gray">
+          {/* 不可关闭的红色横幅 */}
+          <div className="bg-status-red text-white px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">⚠️</span>
+              <span className="font-bold">危急值预警 · 必须立即处置</span>
+            </div>
+            <span className="text-xs">剩余 28:42</span>
+          </div>
+          <div className="p-6 max-w-4xl mx-auto space-y-4">
+            {/* 患者信息 */}
+            <Card>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-lg font-bold">张某 · 58 岁 · 男</div>
+                  <div className="text-sm text-gray-500 mt-1">门诊号 202608270008 · 内科张文华医生</div>
+                </div>
+                <div className="text-xs px-3 py-1 bg-status-red/10 text-status-red rounded-full">🔴 危急值</div>
+              </div>
+            </Card>
+
+            {/* 危急值详情 */}
+            <Card>
+              <div className="text-sm font-medium mb-3">📊 危急值详情</div>
+              <div className="bg-status-red/5 border border-status-red/20 rounded-lg p-4">
+                <div className="text-2xl font-bold text-status-red">血钾 6.8 mmol/L</div>
+                <div className="text-sm text-gray-600 mt-1">正常参考值：3.5 - 5.5 mmol/L</div>
+                <div className="text-sm text-status-red mt-2 font-medium">⚠️ 超出正常上限 23.6%，可能引发心律失常</div>
+              </div>
+            </Card>
+
+            {/* 4 通道推送状态 */}
+            <Card>
+              <div className="text-sm font-medium mb-3">📡 4 通道强推状态</div>
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { name: '工作台红点', time: '立即' },
+                  { name: 'App Push', time: '12s' },
+                  { name: '短信', time: '34s' },
+                  { name: '诊所大屏', time: '48s' },
+                ].map((c, i) => (
+                  <div key={i} className="border border-status-green/30 bg-status-green/5 rounded-lg p-3 text-center">
+                    <div className="text-status-green text-xl">✅</div>
+                    <div className="text-xs mt-1 font-medium">{c.name}</div>
+                    <div className="text-xs text-gray-500">已送达 {c.time}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* 处置建议 */}
+            <Card>
+              <div className="text-sm font-medium mb-3">💊 AI 处置建议</div>
+              <ul className="text-sm space-y-2 text-gray-700">
+                <li>① 立即复查血气 + 心电图</li>
+                <li>② 静脉注射 10% 葡萄糖酸钙 10-20ml</li>
+                <li>③ 胰岛素 + 葡萄糖降钾</li>
+                <li>④ 评估是否急诊透析</li>
+              </ul>
+            </Card>
+
+            {/* 已读按钮 */}
+            {!read ? (
+              <button onClick={() => setRead(true)} className="w-full bg-status-red text-white rounded-xl py-4 font-bold text-lg">
+                ✅ 我已知悉，立即处置
+              </button>
+            ) : (
+              <div className="bg-status-green/10 border border-status-green/30 rounded-xl p-4 text-center">
+                <div className="text-status-green font-bold">✅ 已读确认 · 09:30:15</div>
+                <div className="text-xs text-gray-500 mt-1">已通知院长 · 处置中</div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // ========== 路由 ==========
+    const App = () => {
+      const [hash, setHash] = useState(location.hash || '#/login');
+
+      useEffect(() => {
+        const handler = () => setHash(location.hash || '#/login');
+        window.addEventListener('hashchange', handler);
+        return () => window.removeEventListener('hashchange', handler);
+      }, []);
+
+      // 路由匹配（V2.0 增 P-2 预诊 / P-1 追问 / P0 挂号 / P0.5 危急值）
+      if (hash === '#/login' || hash === '' || hash === '#/') return <LoginPage />;
+      if (hash === '#/pre-diagnosis' || hash === '#/pre-diagnosis/index') return <PreDiagnosisPage />;
+      if (hash === '#/pre-diagnosis/chat') return <PreDiagnosisChatPage />;
+      if (hash === '#/register') return <RegisterPage />;
+      if (hash === '#/dashboard') return <DashboardPage />;
+      if (hash === '#/emr/new' || hash === '#/emr/ai-result' || hash === '#/prescription') return <EMREditPage />;
+      if (hash === '#/critical/1') return <CriticalValuePage />;
+      if (hash === '#/followup-config') return <FollowupConfigPage />;
+      if (hash === '#/followup') return <FollowupPage />;
+      if (hash.startsWith('#/followup/patient/')) return <RiskDetailPage />;
+      if (hash === '#/stats') return <StatsPage />;
+      if (hash === '#/demo/error') return <ErrorDemoPage />;
+
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl mb-3">404</div>
+            <div className="text-gray-500 mb-4">页面不存在</div>
+            <Button onClick={() => location.hash = '#/dashboard'}>返回工作台</Button>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
