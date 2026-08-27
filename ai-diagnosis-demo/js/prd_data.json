@@ -1,0 +1,93 @@
+{
+  "version": "V2.0.6",
+  "description": "AI 辅助问诊 demo · 双向追溯数据源（JSON ↔ PRD md 唯一真相）",
+  "last_updated": "2026-08-27",
+  "rules": [
+    {
+      "module": "P3 接诊中",
+      "icon": "🩺",
+      "rules": [
+        { "id": "tip-1",  "title": "7:5 分栏",        "brief": "AI 推理需 Top 3 + 依据，5 列容纳",         "section": "§3.3" },
+        { "id": "tip-2",  "title": "1 次录音",        "brief": "医生双手操作，1 次开/关更自然",           "section": "§3.5 US-MID-001" },
+        { "id": "tip-3",  "title": "过敏高风险条",    "brief": "放主诉上方，临床安全底线",                 "section": "§7.5 US-MID-008" },
+        { "id": "tip-4",  "title": "手动触发 AI",     "brief": "4 医生访谈后决策，不打断",                 "section": "§6.5 US-MID-003" },
+        { "id": "tip-5",  "title": "文字按钮非 emoji", "brief": "1366 屏右栏窄，emoji 易误触",              "section": "§6.5 US-MID-004" },
+        { "id": "tip-6",  "title": "诊断自动填",      "brief": "采纳后自动填，减少重复",                   "section": "§6.5" },
+        { "id": "tip-7",  "title": "自定义检查",      "brief": "基层医院有特检项目",                       "section": "§4.5 D11" },
+        { "id": "tip-8",  "title": "号源释放不锁",    "brief": "基层号源紧张，锁号被放弃",                 "section": "§4.5 D7" },
+        { "id": "tip-9",  "title": "开方弹窗",        "brief": "医生习惯一气呵成，不跳页",                 "section": "§7.5" },
+        { "id": "tip-10", "title": "完成接诊才配随访", "brief": "避免随访任务配错",                         "section": "§8.5 US-MID-010" }
+      ]
+    },
+    {
+      "module": "P-2 预诊",
+      "icon": "🤖",
+      "rules": [
+        { "id": "tip-11", "title": "一体机+App 两形态", "brief": "一体机已配 30 万台",                       "section": "§1.5 D4" },
+        { "id": "tip-12", "title": "档案 opt-in",       "brief": "监管要求，用户主动授权",                   "section": "§2.5 D3" }
+      ]
+    },
+    {
+      "module": "P0.5 危急值",
+      "icon": "🚨",
+      "rules": [
+        { "id": "tip-13", "title": "4 通道强推",       "brief": "医生手术/查房，漏看要命",                   "section": "§9.5 D13" },
+        { "id": "tip-14", "title": "30 分钟已读",      "brief": "30 分钟未处理死亡倍增",                    "section": "§9.5 D14" }
+      ]
+    }
+  ],
+  "tips": [
+    { "id": "tip-1",  "text": "为什么是 7:5 不是 8:4？AI 推理需展示 Top 3 + 推理依据，5 列能容纳。病历实际只填主诉+现病史，7 列足够（PRD §3.3）" },
+    { "id": "tip-2",  "text": "为什么 1 次开/1 次关不是长按？医生双手操作电脑，1 次开 1 次关更自然（PRD §3.5 US-MID-001）" },
+    { "id": "tip-3",  "text": "为什么放在主诉上方？临床安全底线——开方前必须看到。强制拦截同类药（PRD §7.5 US-MID-008）" },
+    { "id": "tip-4",  "text": "为什么手动触发不是自动？医生想录完再触发，不想被打断（PRD §6.5 US-MID-003）" },
+    { "id": "tip-5",  "text": "为什么文字按钮不是 emoji？1366 屏右栏窄，emoji 易误触。文字更专业（PRD §6.5 US-MID-004）" },
+    { "id": "tip-6",  "text": "为什么采纳后自动填？减少医生重复输入。点 ✕ 可删，可手动加（PRD §6.5）" },
+    { "id": "tip-7",  "text": "为什么支持自定义？基层医生会加\"心肌酶谱\"等医院特有项目，AI 未必覆盖（PRD §4.5 D11）" },
+    { "id": "tip-8",  "text": "为什么号源释放不是锁号？基层号源紧张，锁号被直接放弃，诊中分流失去意义（PRD §4.5 D7）" },
+    { "id": "tip-9",  "text": "为什么弹窗不是新页面？医生习惯一气呵成，不跳页（PRD §7.5）" },
+    { "id": "tip-10", "text": "为什么点完才配随访？医生看完才确认，避免随访任务配错（PRD §8.5 US-MID-010）" },
+    { "id": "tip-11", "text": "为什么显示两种形态？基层医保一体机已配 30 万台，App 反而是补充（PRD §1.5 D4）" },
+    { "id": "tip-12", "text": "为什么 opt-in 不是默认读取？监管要求——病历数据敏感，必须用户主动授权（PRD §2.5 D3）" },
+    { "id": "tip-13", "text": "为什么 4 通道（红点/App/短信/大屏）？医生可能在手术/查房/午休，单通道漏看就是人命（PRD §9.5 D13）" },
+    { "id": "tip-14", "text": "为什么 30 分钟强制？临床数据——危急值平均 30 分钟内未处理死亡风险倍增（PRD §9.5 D14）" }
+  ],
+  "status_meta": {
+    "pre_diagnosis":      { "label": "AI 预诊中",  "color": "blue",   "icon": "🤖" },
+    "pre_diagnosis_done": { "label": "预诊完成",   "color": "blue",   "icon": "✓" },
+    "registered":         { "label": "已挂号",     "color": "blue",   "icon": "📋" },
+    "waiting":            { "label": "候诊中",     "color": "yellow", "icon": "⏳" },
+    "consulting":         { "label": "接诊中",     "color": "blue",   "icon": "🩺" },
+    "test_ordered":       { "label": "检查中",     "color": "yellow", "icon": "🧪" },
+    "critical_value":     { "label": "危急值",     "color": "red",    "icon": "🚨" },
+    "prescribed":         { "label": "已开方",     "color": "green",  "icon": "💊" },
+    "followup_configured":{ "label": "随访已配",   "color": "green",  "icon": "📅" },
+    "followup_active":    { "label": "随访中",     "color": "green",  "icon": "📞" },
+    "completed":          { "label": "已结诊",     "color": "gray",   "icon": "✓" },
+    "missed":             { "label": "失访",       "color": "gray",   "icon": "✕" }
+  },
+  "disease_library": [
+    { "cat": "呼吸", "name": "急性支气管炎" },
+    { "cat": "呼吸", "name": "肺炎" },
+    { "cat": "呼吸", "name": "支气管哮喘" },
+    { "cat": "呼吸", "name": "过敏性咳嗽" },
+    { "cat": "消化", "name": "急性胃肠炎" },
+    { "cat": "消化", "name": "胃食管反流" },
+    { "cat": "消化", "name": "消化性溃疡" },
+    { "cat": "心血管", "name": "高血压" },
+    { "cat": "心血管", "name": "冠心病" },
+    { "cat": "心血管", "name": "心律失常" },
+    { "cat": "内分泌", "name": "糖尿病" },
+    { "cat": "内分泌", "name": "甲亢" },
+    { "cat": "神经", "name": "头痛" },
+    { "cat": "神经", "name": "失眠" },
+    { "cat": "神经", "name": "焦虑" },
+    { "cat": "皮肤", "name": "湿疹" },
+    { "cat": "皮肤", "name": "荨麻疹" },
+    { "cat": "皮肤", "name": "带状疱疹" },
+    { "cat": "其他", "name": "普通感冒" },
+    { "cat": "其他", "name": "流行性感冒" },
+    { "cat": "其他", "name": "尿路感染" },
+    { "cat": "其他", "name": "急性扁桃体炎" }
+  ]
+}

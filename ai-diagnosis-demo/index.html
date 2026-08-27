@@ -9,6 +9,30 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
+    // 🆕 V2.0.6 双向追溯：fetch JSON 数据（失败用 window.__PRD_* 硬编码兜底）
+    window.__PRD__ = { status_meta: null, disease_library: null, rules: null, tips: null };
+    fetch('./js/prd_data.json')
+      .then(r => r.ok ? r.json() : Promise.reject('not ok'))
+      .then(d => {
+        window.__PRD__ = d;
+        console.log('✅ V2.0.6 PRD data loaded from JSON', d);
+        // 轮询更新 TopNav 角标（React 渲染可能覆盖，需重试）
+        const update = () => {
+          const el = document.getElementById('prd-data-status');
+          if (el) el.textContent = `📦 JSON: ${d.version} ✅`;
+        };
+        [100, 500, 1000, 2000, 3000].forEach(t => setTimeout(update, t));
+      })
+      .catch(() => {
+        console.warn('⚠️ PRD JSON fetch failed, using hardcoded fallback (V2.0.6)');
+        const update = () => {
+          const el = document.getElementById('prd-data-status');
+          if (el) el.textContent = '📦 JSON: fallback (硬编码)';
+        };
+        [100, 500, 1000, 2000, 3000].forEach(t => setTimeout(update, t));
+      });
+  </script>
+  <script>
     tailwind.config = {
       theme: {
         extend: {
@@ -96,6 +120,8 @@
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="bg-white/20 px-2 py-1 rounded">AI 辅助问诊系统联盟001号店</span>
+          {/* 🆕 V2.0.6 数据源状态指示器 */}
+          <span id="prd-data-status" className="text-xs bg-ai-purple/30 px-2 py-0.5 rounded" title="双击查看数据源">📦 JSON: 加载中...</span>
           <span>张文华 医生</span>
         </div>
       </div>
