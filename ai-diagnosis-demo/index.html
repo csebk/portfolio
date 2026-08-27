@@ -306,6 +306,108 @@
       </span>
     );
 
+    // 🆕 V2.0.5 左抽屉 PRD 规则树（拆法 5 第二阶段：结构化全貌）
+    const RULES_TREE = [
+      { module: 'P3 接诊中', icon: '🩺', rules: [
+        { id: 'tip-1',  title: '7:5 分栏',        brief: 'AI 推理需 Top 3 + 依据，5 列容纳', section: '§3.3' },
+        { id: 'tip-2',  title: '1 次录音',        brief: '医生双手操作，1 次开/关更自然',   section: '§3.5 US-MID-001' },
+        { id: 'tip-3',  title: '过敏高风险条',    brief: '放主诉上方，临床安全底线',         section: '§7.5 US-MID-008' },
+        { id: 'tip-4',  title: '手动触发 AI',     brief: '4 医生访谈后决策，不打断',        section: '§6.5 US-MID-003' },
+        { id: 'tip-5',  title: '文字按钮非 emoji', brief: '1366 屏右栏窄，emoji 易误触',    section: '§6.5 US-MID-004' },
+        { id: 'tip-6',  title: '诊断自动填',      brief: '采纳后自动填，减少重复',          section: '§6.5' },
+        { id: 'tip-7',  title: '自定义检查',      brief: '基层医院有特检项目',              section: '§4.5 D11' },
+        { id: 'tip-8',  title: '号源释放不锁',    brief: '基层号源紧张，锁号被放弃',        section: '§4.5 D7' },
+        { id: 'tip-9',  title: '开方弹窗',        brief: '医生习惯一气呵成，不跳页',        section: '§7.5' },
+        { id: 'tip-10', title: '完成接诊才配随访', brief: '避免随访任务配错',                section: '§8.5 US-MID-010' },
+      ]},
+      { module: 'P-2 预诊', icon: '🤖', rules: [
+        { id: 'tip-11', title: '一体机+App 两形态', brief: '一体机已配 30 万台',             section: '§1.5 D4' },
+        { id: 'tip-12', title: '档案 opt-in',       brief: '监管要求，用户主动授权',         section: '§2.5 D3' },
+      ]},
+      { module: 'P0.5 危急值', icon: '🚨', rules: [
+        { id: 'tip-13', title: '4 通道强推',       brief: '医生手术/查房，漏看要命',         section: '§9.5 D13' },
+        { id: 'tip-14', title: '30 分钟已读',      brief: '30 分钟未处理死亡倍增',          section: '§9.5 D14' },
+      ]},
+    ];
+
+    const LeftPanel = ({ currentPath }) => {
+      const [open, setOpen] = useState(true);
+      const [expandedModules, setExpandedModules] = useState({ 'P3 接诊中': true, 'P-2 预诊': true, 'P0.5 危急值': true });
+
+      const jumpTo = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.remove('pulse-highlight');
+          void el.offsetWidth; // 强制重绘
+          el.classList.add('pulse-highlight');
+          setTimeout(() => el.classList.remove('pulse-highlight'), 1600);
+        }
+      };
+
+      const totalRules = RULES_TREE.reduce((sum, m) => sum + m.rules.length, 0);
+
+      return (
+        <div className="fixed left-0 top-0 h-screen z-40 flex" style={{ pointerEvents: 'none' }}>
+          <style>{`
+            @keyframes pulse-highlight {
+              0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.9); }
+              40% { box-shadow: 0 0 0 12px rgba(124, 58, 237, 0.2); }
+              100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+            }
+            .pulse-highlight { animation: pulse-highlight 1.5s ease-out; border-radius: 8px; }
+          `}</style>
+          {/* 折叠标签条 */}
+          {!open && (
+            <button onClick={() => setOpen(true)} className="bg-ai-purple text-white px-2 py-4 rounded-r-lg shadow-lg hover:bg-ai-purple/90 self-start mt-20" style={{ pointerEvents: 'auto', writingMode: 'vertical-rl' }}>
+              <span className="text-xs font-bold">📋 PRD 规则</span>
+            </button>
+          )}
+          {/* 抽屉本体 */}
+          {open && (
+            <div className="bg-white border-r-2 border-ai-purple/30 shadow-xl w-60 flex flex-col" style={{ pointerEvents: 'auto' }}>
+              <div className="bg-gradient-to-r from-ai-purple to-ai-purple/80 text-white p-3 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold">📋 PRD 规则树</div>
+                  <div className="text-[10px] opacity-80 mt-0.5">{RULES_TREE.length} 模块 · {totalRules} 条规则</div>
+                </div>
+                <button onClick={() => setOpen(false)} className="text-white hover:bg-white/20 rounded w-6 h-6 text-sm">◀</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                {RULES_TREE.map((m, mi) => (
+                  <div key={mi} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button onClick={() => setExpandedModules({...expandedModules, [m.module]: !expandedModules[m.module]})} className="w-full flex items-center justify-between bg-gray-50 px-2 py-1.5 text-xs font-bold hover:bg-gray-100">
+                      <span>{m.icon} {m.module} <span className="text-gray-400 font-normal">({m.rules.length})</span></span>
+                      <span className="text-gray-400">{expandedModules[m.module] ? '▼' : '▶'}</span>
+                    </button>
+                    {expandedModules[m.module] && (
+                      <div className="bg-white">
+                        {m.rules.map((r, ri) => (
+                          <div key={ri} className="border-b border-gray-100 last:border-b-0 px-2 py-1.5 hover:bg-ai-purple-light/30 transition">
+                            <div className="flex items-start justify-between gap-1">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[11px] font-medium text-gray-800 truncate">💡 {r.title}</div>
+                                <div className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{r.brief}</div>
+                                <div className="text-[9px] text-ai-purple mt-0.5">{r.section}</div>
+                              </div>
+                              <button onClick={() => jumpTo(r.id)} className="flex-shrink-0 text-[10px] bg-ai-purple text-white px-1.5 py-0.5 rounded hover:bg-ai-purple/80" title="跳到 demo 对应位置">📍</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="text-[10px] text-gray-400 p-2 text-center">
+                  💡 点 📍 跳到 demo 紫色高亮位置
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
     // ========== P3 接诊中（V2.0.2 增强版·左 7/右 5 + 8 改合一）==========
     // 📋 PRD 追溯：本组件对应 PRD §3.3 页面 P3 + §6 模块 6（AI 诊断）+ §3 模块 3（语音转写）
     //                + §4 模块 4（诊中分流）+ §7 模块 7（处方过敏冲突）
@@ -391,7 +493,7 @@
           <TopNav />
           <div className="p-4 max-w-[1600px] mx-auto">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold">🩺 接诊中 - 王秀英 <span className="text-sm text-gray-500 font-normal ml-2">65岁 · 女 · 急性支气管炎</span>
+              <h2 id="tip-1" className="text-xl font-bold">🩺 接诊中 - 王秀英 <span className="text-sm text-gray-500 font-normal ml-2">65岁 · 女 · 急性支气管炎</span>
                 <Tip>为什么是 7:5 不是 8:4？AI 推理需展示 Top 3 + 推理依据，5 列能容纳。病历实际只填主诉+现病史，7 列足够（PRD §3.3）</Tip>
               </h2>
               <div className="flex items-center gap-2 text-xs">
@@ -458,7 +560,7 @@
                 </Card>
 
                 {/* 🆕 审 6：过敏高风险警示条 */}
-                <div className="bg-status-red/10 border-2 border-status-red rounded-lg p-2.5 text-xs flex items-center gap-2">
+                <div id="tip-3" className="bg-status-red/10 border-2 border-status-red rounded-lg p-2.5 text-xs flex items-center gap-2">
                   <span className="text-2xl">⚠️</span>
                   <div className="flex-1">
                     <div className="font-bold text-status-red">过敏高风险患者
@@ -483,7 +585,7 @@
                         </div>
                       ) : (
                         // 📋 PRD §3.5 规则 [1 次开/1 次关] - US-MID-001
-                        <span className="inline-flex items-center gap-1">
+                        <span id="tip-2" className="inline-flex items-center gap-1">
                           <button onClick={startRecording} className="flex items-center gap-1 bg-med-blue text-white rounded-full px-3 py-1.5 text-xs">
                             🎙️ 开始接诊录音
                           </button>
@@ -521,7 +623,7 @@
 
                 {/* 🆕 改 3：诊断疾病字段（接受 AI 自动填 + 手动选）*/}
                 <Card>
-                  <div className="flex items-center justify-between mb-2">
+                  <div id="tip-6" className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-sm">🩺 诊断疾病 <span className="text-xs text-gray-500">（{diagnoses.length} 项）</span>
                       <Tip>为什么采纳后自动填？减少医生重复输入。点 ✕ 可删，可手动加（PRD §6.5）</Tip>
                     </h3>
@@ -561,13 +663,13 @@
                     ))}
                   </div>
                   {/* 🆕 自定义输入框 */}
-                  <div className="flex gap-1 mb-2 items-center">
+                  <div id="tip-7" className="flex gap-1 mb-2 items-center">
                     <input value={customTestInput} onChange={e => setCustomTestInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCustomTest()} placeholder="自定义检查项（如心肌酶谱）..." className="flex-1 border rounded px-2 py-1 text-xs" />
                     <button onClick={addCustomTest} className="bg-status-green text-white rounded px-2 py-1 text-xs">+ 添加</button>
                     <Tip>为什么支持自定义？基层医生会加"心肌酶谱"等医院特有项目，AI 未必覆盖（PRD §4.5 D11）</Tip>
                   </div>
                   {/* 📋 PRD §4.5 规则 [检查号源释放/可自定义] - US-MID-005 */}
-                  <span className="inline-flex items-center gap-1 w-full">
+                  <span id="tip-8" className="inline-flex items-center gap-1 w-full">
                     <button onClick={() => setShowTestModal(true)} className="flex-1 bg-med-blue text-white rounded-lg py-1.5 text-xs font-medium">🩺 开检查单（{selectedTests.size + customTests.length} 项）· 诊中分流</button>
                     <Tip>为什么号源释放不是锁号？基层号源紧张，锁号被直接放弃，诊中分流失去意义（PRD §4.5 D7）</Tip>
                   </span>
@@ -575,7 +677,7 @@
 
                 {/* 处方与医嘱 - 📋 PRD §7.5 规则 [过敏冲突实时警告] - US-MID-008 */}
                 <Card>
-                  <div className="flex items-center justify-between">
+                  <div id="tip-9" className="flex items-center justify-between">
                     <h3 className="font-bold text-sm">💊 处方与医嘱</h3>
                     <span className="inline-flex items-center gap-1">
                       <button onClick={() => setShowRxModal(true)} className="bg-med-blue text-white rounded-lg px-3 py-1.5 text-xs font-medium">💊 开方（弹窗）→</button>
@@ -601,7 +703,7 @@
                 </Card>
 
                 {/* 🆕 审 4：底部三按钮并排 - 📋 PRD §8.5 规则 [基于诊断自动配 5 任务] - US-MID-010 */}
-                <div className="flex gap-2 pt-2 items-center">
+                <div id="tip-10" className="flex gap-2 pt-2 items-center">
                   <Button color="white" className="flex-1">📝 保存草稿</Button>
                   <Button color="white" onClick={() => setShowRxModal(true)} className="flex-1">💊 开方（弹窗）</Button>
                   <span className="inline-flex items-center gap-1 flex-1">
@@ -614,7 +716,7 @@
               {/* 右 5/12：AI 诊断（精简：删"治疗方案"卡片）*/}
               <div className="col-span-5 space-y-3">
                 {/* 🆕 审 2：AI 触发按钮移到卡片顶部 - 📋 PRD §6.5 规则 [手动触发 AI] - US-MID-003 */}
-                <div className="flex items-center justify-between">
+                <div id="tip-4" className="flex items-center justify-between">
                   <h3 className="font-bold text-sm flex items-center gap-1"><span className="text-ai-purple">🤖</span> AI 辅助诊断
                     <Tip>为什么手动触发不是自动？医生想录完再触发，不想被打断（PRD §6.5 US-MID-003）</Tip>
                   </h3>
@@ -646,7 +748,7 @@
                               <span className="font-medium text-xs">{i + 1}. {d.name}</span>
                               <span className="text-xs text-med-blue font-bold">{d.confidence}%</span>
                             </div>
-                            <div className="text-[10px] text-gray-600 mb-2">{d.reasoning}
+                            <div id="tip-5" className="text-[10px] text-gray-600 mb-2">{d.reasoning}
                               <Tip>为什么文字按钮不是 emoji？1366 屏右栏窄，emoji 易误触。文字更专业（PRD §6.5 US-MID-004）</Tip>
                             </div>
                             {/* 🆕 审 5：按钮文案化 - 📋 PRD §6.5 规则 [采纳粒度] - US-MID-004 */}
@@ -1252,7 +1354,7 @@
           {/* 左侧：大屏一体机说明 */}
           <div className="w-80 bg-gradient-to-b from-med-blue to-med-blue/80 text-white p-6 flex flex-col">
             <div className="text-xs opacity-70 mb-2">一体机模式</div>
-            <div className="text-2xl font-bold mb-1 flex items-center">AI 预诊一体机
+            <div id="tip-11" className="text-2xl font-bold mb-1 flex items-center">AI 预诊一体机
               <span className="ml-1"><Tip>为什么显示两种形态？基层医保一体机已配 30 万台，App 反而是补充（PRD §1.5 D4）</Tip></span>
             </div>
             <div className="text-xs opacity-80 mb-6">基层诊所·医保已配</div>
@@ -1305,7 +1407,7 @@
             </div>
 
             {/* 档案 opt-in */}
-            <div className={`border-2 rounded-xl p-3 cursor-pointer transition ${optIn ? 'border-med-blue bg-med-blue-light' : 'border-gray-200'}`} onClick={() => setOptIn(!optIn)}>
+            <div id="tip-12" className={`border-2 rounded-xl p-3 cursor-pointer transition ${optIn ? 'border-med-blue bg-med-blue-light' : 'border-gray-200'}`} onClick={() => setOptIn(!optIn)}>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium flex items-center">📋 带入我的健康档案
@@ -1538,7 +1640,7 @@
 
             {/* 4 通道推送状态 */}
             <Card>
-              <div className="text-sm font-medium mb-3 flex items-center">📡 4 通道强推状态
+              <div id="tip-13" className="text-sm font-medium mb-3 flex items-center">📡 4 通道强推状态
                 <Tip>为什么 4 通道（红点/App/短信/大屏）？医生可能在手术/查房/午休，单通道漏看就是人命（PRD §9.5 D13）</Tip>
               </div>
               <div className="grid grid-cols-4 gap-3">
@@ -1570,7 +1672,7 @@
 
             {/* 已读按钮 */}
             {!read ? (
-              <span className="inline-block w-full">
+              <span id="tip-14" className="inline-block w-full">
                 <button onClick={() => setRead(true)} className="w-full bg-status-red text-white rounded-xl py-4 font-bold text-lg">
                   ✅ 我已知悉，立即处置
                 </button>
@@ -1597,27 +1699,38 @@
         return () => window.removeEventListener('hashchange', handler);
       }, []);
 
+      // 🆕 V2.0.5 全局 LeftPanel 包裹（不渲染在 login 页）
       // 路由匹配（V2.0 增 P-2 预诊 / P-1 追问 / P0 挂号 / P0.5 危急值）
-      if (hash === '#/login' || hash === '' || hash === '#/') return <LoginPage />;
-      if (hash === '#/pre-diagnosis' || hash === '#/pre-diagnosis/index') return <PreDiagnosisPage />;
-      if (hash === '#/pre-diagnosis/chat') return <PreDiagnosisChatPage />;
-      if (hash === '#/register') return <RegisterPage />;
-      if (hash === '#/dashboard') return <DashboardPage />;
-      if (hash === '#/emr/new' || hash === '#/emr/ai-result' || hash === '#/prescription') return <EMREditPage />;
-      if (hash === '#/critical/1') return <CriticalValuePage />;
-      if (hash === '#/followup-config') return <FollowupConfigPage />;
-      if (hash === '#/followup') return <FollowupPage />;
-      if (hash.startsWith('#/followup/patient/')) return <RiskDetailPage />;
-      if (hash === '#/stats') return <StatsPage />;
-      if (hash === '#/demo/error') return <ErrorDemoPage />;
-
-      return (
+      let page;
+      if (hash === '#/login' || hash === '' || hash === '#/') page = <LoginPage />;
+      else if (hash === '#/pre-diagnosis' || hash === '#/pre-diagnosis/index') page = <PreDiagnosisPage />;
+      else if (hash === '#/pre-diagnosis/chat') page = <PreDiagnosisChatPage />;
+      else if (hash === '#/register') page = <RegisterPage />;
+      else if (hash === '#/dashboard') page = <DashboardPage />;
+      else if (hash === '#/emr/new' || hash === '#/emr/ai-result' || hash === '#/prescription') page = <EMREditPage />;
+      else if (hash === '#/critical/1') page = <CriticalValuePage />;
+      else if (hash === '#/followup-config') page = <FollowupConfigPage />;
+      else if (hash === '#/followup') page = <FollowupPage />;
+      else if (hash.startsWith('#/followup/patient/')) page = <RiskDetailPage />;
+      else if (hash === '#/stats') page = <StatsPage />;
+      else if (hash === '#/demo/error') page = <ErrorDemoPage />;
+      else page = (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl mb-3">404</div>
             <div className="text-gray-500 mb-4">页面不存在</div>
             <Button onClick={() => location.hash = '#/dashboard'}>返回工作台</Button>
           </div>
+        </div>
+      );
+
+      // 🆕 V2.0.5 Login 页不显示 LeftPanel（避免遮挡手机壳 UI）
+      if (hash === '#/login' || hash === '' || hash === '#/') return page;
+
+      return (
+        <div className="flex">
+          <LeftPanel currentPath={hash} />
+          <div className="flex-1" style={{ marginLeft: 240 }}>{page}</div>
         </div>
       );
     };
