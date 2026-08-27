@@ -1,5 +1,5 @@
 {
-  "version": "V2.1.0",
+  "version": "V2.2.0",
   "description": "AI 辅助问诊 demo · 双向追溯数据源（JSON ↔ PRD md 唯一真相）",
   "last_updated": "2026-08-27",
   "rules": [

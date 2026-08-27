@@ -60,6 +60,9 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .spin { animation: spin 1s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    /* 🆕 V2.2.0 改 2：左抽屉关闭时隐藏所有 PRD 提示 */
+    body.left-panel-closed .tip-pdr { display: none !important; }
+    body.left-panel-closed .prd-trace-btn { display: none !important; }
   </style>
 </head>
 <body class="bg-bg-gray">
@@ -348,8 +351,9 @@
     ]);
 
     // 🆕 V2.0.4 "为什么这样设计" 悬浮提示组件（开发 hover 看设计意图）
+    // 🆕 V2.2.0 改 2：Tip 组件受左抽屉开关影响（关闭时不显示 PRD 提示）
     const Tip = ({ children }) => (
-      <span className="relative inline-block ml-1 group align-middle">
+      <span className="relative inline-block ml-1 group align-middle tip-pdr">
         <span className="inline-block w-4 h-4 bg-ai-purple-light text-ai-purple rounded-full text-[10px] font-bold leading-4 text-center cursor-help border border-ai-purple/40">?</span>
         <span className="hidden group-hover:block absolute z-50 left-0 top-full mt-1 w-72 bg-white border-2 border-ai-purple/40 rounded-lg shadow-xl p-2.5 text-[11px] text-gray-700 leading-relaxed text-left">
           💡 {children}
@@ -382,9 +386,20 @@
       ]},
     ]);
 
-    const LeftPanel = ({ currentPath }) => {
-      const [open, setOpen] = useState(true);
+    // 🆕 V2.2.0 改 1+2：LeftPanel 接受 App 顶层 open/setOpen + 展开/收起按钮
+    const LeftPanel = ({ currentPath, open: openProp, setOpen: setOpenProp }) => {
+      const [openLocal, setOpenLocal] = useState(true);
       const [expandedModules, setExpandedModules] = useState({ 'P3 接诊中': true, 'P-2 预诊': true, 'P0.5 危急值': true });
+      // 兼容调用（无 props 时用本地 state）
+      const open = openProp !== undefined ? openProp : openLocal;
+      const setOpen = setOpenProp || setOpenLocal;
+
+      // 🆕 V2.2.0 改 2：同步 open 状态到 window，供 Tip/P3 追溯按钮读取
+      useEffect(() => {
+        window.__LEFT_PANEL_OPEN__ = open;
+        // 触发自定义事件让 Tip 组件重渲染（用 class 切换代替，避免 React 重渲染）
+        document.body.classList.toggle('left-panel-closed', !open);
+      }, [open]);
 
       const jumpTo = (id) => {
         const el = document.getElementById(id);
@@ -456,6 +471,17 @@
               </div>
             </div>
           )}
+          {/* 🆕 V2.2.0 改 1：收起态按钮（24px 侧边 + ▶ 展开）*/}
+          {!open && (
+            <button
+              onClick={() => setOpen(true)}
+              className="w-6 h-screen bg-ai-purple text-white text-xs hover:bg-ai-purple/80 flex flex-col items-center justify-center"
+              style={{ pointerEvents: 'auto' }}
+              title="展开 PRD 规则树"
+            >
+              ▶
+            </button>
+          )}
         </div>
       );
     };
@@ -467,7 +493,9 @@
     //                / US-MID-006（检查回流）/ US-MID-007（结果关联）/ US-MID-009（边界 24h）
     // 改本组件前必看：PRD V2.0 末尾"📺 demo 演示路径"小节
     const EMREditPage = () => {
-      const [symptoms, setSymptoms] = useState(['咳嗽', '咳痰', '发热', '乏力']);
+      // 🆕 V2.2.0 改 4：主诉/现病史草稿（录音完成后填入，医生点"接受"才追加到左栏）
+      const [chiefComplaintDraft, setChiefComplaintDraft] = useState('');
+      const [presentIllnessDraft, setPresentIllnessDraft] = useState('');
       // 🆕 V2.0.7 体征（语音识别·只读）默认带几条便于演示
       const [signs, setSigns] = useState(['呼吸音延长', '肺部湿啰音']);
       const [aiLoading, setAiLoading] = useState(false);
@@ -508,8 +536,9 @@
         setRecording(false);
         setTranscribing(true);
         setTimeout(() => {
-          setChiefComplaint('咳嗽 3 天，伴发热 38.5°C，夜咳加重');
-          setPresentIllness('3 天前受凉后出现阵发性咳嗽，夜间加重影响睡眠，伴黄色粘痰，体温最高 38.7°C，伴气短。');
+          // 🆕 V2.2.0 改 4：录音完成只填右栏草稿（待确认），医生点"接受"才追加到左栏
+          setChiefComplaintDraft('咳嗽 3 天，伴发热 38.5°C，夜咳加重');
+          setPresentIllnessDraft('3 天前受凉后出现阵发性咳嗽，夜间加重影响睡眠，伴黄色粘痰，体温最高 38.7°C，伴气短。');
           setTranscribing(false);
         }, 1800);
       };
@@ -555,8 +584,8 @@
                 <Tip>为什么是 7:5 不是 8:4？AI 推理需展示 Top 3 + 推理依据，5 列能容纳。病历实际只填主诉+现病史，7 列足够（PRD §3.3）</Tip>
               </h2>
               <div className="flex items-center gap-2 text-xs">
-                {/* 🆕 V2.0.3 PRD 追溯气泡 */}
-                <div className="relative">
+                {/* 🆕 V2.0.3 PRD 追溯气泡（🆕 V2.2.0 加 prd-trace-btn 类以便抽屉关闭时隐藏）*/}
+                <div className="relative prd-trace-btn">
                   <button onClick={() => setShowPRDTrace(!showPRDTrace)} className="bg-ai-purple-light border border-ai-purple/40 text-ai-purple rounded-full px-3 py-1 hover:bg-ai-purple hover:text-white transition text-xs font-medium">
                     💡 PRD 追溯
                   </button>
@@ -609,11 +638,11 @@
               <div className="col-span-7 space-y-3">
                 <Card>
                   <h3 className="font-bold mb-2 text-sm">👤 患者信息（自动带入）</h3>
-                  <div className="grid grid-cols-4 gap-2 text-xs">
+                  {/* 🆕 V2.2.0 改 3：去掉"性别"后"过敏史"列（保留在既往史中）*/}
+                  <div className="grid grid-cols-3 gap-2 text-xs">
                     <div><span className="text-gray-500">姓名</span><div className="font-medium">王秀英</div></div>
                     <div><span className="text-gray-500">年龄</span><div className="font-medium">65</div></div>
                     <div><span className="text-gray-500">性别</span><div className="font-medium">女</div></div>
-                    <div><span className="text-gray-500">过敏史</span><div className="font-medium text-status-red">⚠️ 青霉素</div></div>
                   </div>
 
                   {/* 🆕 V2.0.8：既往史 9 类子字段 合并到患者信息块，默认折叠 */}
@@ -661,11 +690,11 @@
                   <div className="space-y-2">
                     <div>
                       <label className="text-xs text-gray-500">主诉 * <span className="text-ai-purple">· 预诊带入 · 可修改</span></label>
-                      <textarea value={chiefComplaint} onChange={e => setChiefComplaint(e.target.value)} className="w-full border rounded-lg px-2 py-1.5 text-sm" rows="1" />
+                      <textarea data-field="chief_complaint" value={chiefComplaint} onChange={e => setChiefComplaint(e.target.value)} className="w-full border rounded-lg px-2 py-1.5 text-sm" rows="1" />
                     </div>
                     <div>
                       <label className="text-xs text-gray-500">现病史 * <span className="text-ai-purple">· 预诊带入 · 可修改</span></label>
-                      <textarea value={presentIllness} onChange={e => setPresentIllness(e.target.value)} className="w-full border rounded-lg px-2 py-1.5 text-sm" rows="2" />
+                      <textarea data-field="present_illness" value={presentIllness} onChange={e => setPresentIllness(e.target.value)} className="w-full border rounded-lg px-2 py-1.5 text-sm" rows="2" />
                     </div>
                   </div>
                 </Card>
@@ -757,16 +786,58 @@
                 </div>
 
                 <Card>
-                  {/* 🆕 V2.0.8 改：症状 + 体征（语音识别·只读）合并到一行显示，放在 AI 辅助诊断 h3 下面 */}
+                  {/* 🆕 V2.2.0 改 4：右栏"主诉/现病史"（待确认）— 录音完成后只改这里，医生点"接受"才追加到左栏 */}
                   <div className="bg-ai-purple/5 border border-ai-purple/30 rounded-lg p-2 mb-2">
                     <div className="flex items-start gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-bold text-ai-purple mb-0.5">🎙️ 症状（只读）</div>
-                        {symptoms.length === 0 ? <div className="text-[9px] text-gray-500">⏳ 等待转写</div> : <div className="flex flex-wrap gap-0.5">{symptoms.slice(0,4).map((s,i) => <span key={i} className="bg-ai-purple text-white px-1.5 py-0 rounded text-[9px]">{s}</span>)}{symptoms.length > 4 && <span className="text-[9px] text-gray-500">+{symptoms.length-4}</span>}</div>}
+                        <div className="text-[10px] font-bold text-ai-purple mb-0.5 flex items-center gap-1">
+                          🎙️ 主诉（待确认）
+                          {chiefComplaintDraft && (
+                            <button
+                              onClick={() => {
+                                // 追加到左栏（用户要求 2B：接受后追加）
+                                const ta = document.querySelector('textarea[data-field="chief_complaint"]');
+                                if (ta) {
+                                  const oldVal = ta.value;
+                                  ta.value = oldVal ? oldVal + '；' + chiefComplaintDraft : chiefComplaintDraft;
+                                  // 触发 React onChange
+                                  const ev = new Event('input', { bubbles: true });
+                                  ta.dispatchEvent(ev);
+                                }
+                                setChiefComplaintDraft('');
+                              }}
+                              className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
+                              title="接受并追加到左栏主诉"
+                            >✅ 接受</button>
+                          )}
+                        </div>
+                        {chiefComplaintDraft ? (
+                          <div className="text-[10px] text-gray-800 leading-snug bg-white p-1 rounded border border-ai-purple/20">{chiefComplaintDraft}</div>
+                        ) : <div className="text-[9px] text-gray-500">⏳ 录音完成后填充</div>}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-bold text-ai-purple mb-0.5">🩺 体征（只读）</div>
-                        {signs.length === 0 ? <div className="text-[9px] text-gray-500">⏳ 等待转写</div> : <div className="flex flex-wrap gap-0.5">{signs.slice(0,4).map((s,i) => <span key={i} className="bg-ai-purple text-white px-1.5 py-0 rounded text-[9px]">{s}</span>)}{signs.length > 4 && <span className="text-[9px] text-gray-500">+{signs.length-4}</span>}</div>}
+                        <div className="text-[10px] font-bold text-ai-purple mb-0.5 flex items-center gap-1">
+                          📋 现病史（待确认）
+                          {presentIllnessDraft && (
+                            <button
+                              onClick={() => {
+                                const ta = document.querySelector('textarea[data-field="present_illness"]');
+                                if (ta) {
+                                  const oldVal = ta.value;
+                                  ta.value = oldVal ? oldVal + '；' + presentIllnessDraft : presentIllnessDraft;
+                                  const ev = new Event('input', { bubbles: true });
+                                  ta.dispatchEvent(ev);
+                                }
+                                setPresentIllnessDraft('');
+                              }}
+                              className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
+                              title="接受并追加到左栏现病史"
+                            >✅ 接受</button>
+                          )}
+                        </div>
+                        {presentIllnessDraft ? (
+                          <div className="text-[10px] text-gray-800 leading-snug bg-white p-1 rounded border border-ai-purple/20">{presentIllnessDraft}</div>
+                        ) : <div className="text-[9px] text-gray-500">⏳ 录音完成后填充</div>}
                       </div>
                     </div>
                   </div>
@@ -1793,6 +1864,8 @@
     // ========== 路由 ==========
     const App = () => {
       const [hash, setHash] = useState(location.hash || '#/login');
+      // 🆕 V2.2.0 左抽屉开关状态（App 顶层 + LeftPanel 同步）
+      const [leftPanelOpen, setLeftPanelOpen] = useState(true);
 
       useEffect(() => {
         const handler = () => setHash(location.hash || '#/login');
@@ -1830,8 +1903,9 @@
 
       return (
         <div className="flex">
-          <LeftPanel currentPath={hash} />
-          <div className="flex-1" style={{ marginLeft: 240 }}>{page}</div>
+          <LeftPanel currentPath={hash} open={leftPanelOpen} setOpen={setLeftPanelOpen} />
+          {/* 🆕 V2.2.0 改 1：main 边距随抽屉状态自适应（240 / 0）*/}
+          <div className="flex-1" style={{ marginLeft: leftPanelOpen ? 240 : 0, transition: 'margin-left 0.2s' }}>{page}</div>
         </div>
       );
     };
