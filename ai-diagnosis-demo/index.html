@@ -475,17 +475,6 @@
               </div>
             </div>
           )}
-          {/* 🆕 V2.3.0 改 A：短紫块（40px 高 + 12 边距）替代 24px 全屏紫条 */}
-          {!open && (
-            <button
-              onClick={() => setOpen(true)}
-              className="w-12 h-10 mt-2 bg-ai-purple text-white text-base hover:bg-ai-purple/80 flex items-center justify-center rounded-r shadow-md"
-              style={{ pointerEvents: 'auto' }}
-              title="展开 PRD 规则树"
-            >
-              📋
-            </button>
-          )}
         </div>
       );
     };
@@ -497,11 +486,11 @@
     //                / US-MID-006（检查回流）/ US-MID-007（结果关联）/ US-MID-009（边界 24h）
     // 改本组件前必看：PRD V2.0 末尾"📺 demo 演示路径"小节
     const EMREditPage = () => {
-      // 🆕 V2.3.0 改 D：预诊带入 + AI 语义合并
-      // - 初始 state 就有预诊摘要（不再"⏳ 录音完成后填充"）
-      // - 录音后更新；接受时 AI 语义合并到左栏；草稿保留（加 ✅ 标记）
-      const [chiefComplaintDraft, setChiefComplaintDraft] = useState('咳嗽 3 天，伴发热 38.5°C');
-      const [presentIllnessDraft, setPresentIllnessDraft] = useState('3 天前受凉后出现阵发性咳嗽，夜间加重，影响睡眠，伴有黄色粘痰，体温最高 38.7°C。');
+      // 🆕 V2.4.0 改 3：主诉/现病史初值改回空（V2.3.0 误加的预诊带入撤销）
+      // - 录音后填右栏草稿；触发 AI 诊断时再更新 5 个值
+      // - 接受按钮合并到左栏；草稿保留（加 ✅ 标记）
+      const [chiefComplaintDraft, setChiefComplaintDraft] = useState('');
+      const [presentIllnessDraft, setPresentIllnessDraft] = useState('');
       // 🆕 V2.3.0 接受标记（true=已合并到左栏）
       const [chiefAccepted, setChiefAccepted] = useState(false);
       const [piAccepted, setPiAccepted] = useState(false);
@@ -513,9 +502,9 @@
       const [recording, setRecording] = useState(false);
       const [recordSec, setRecordSec] = useState(0);
       const [transcribing, setTranscribing] = useState(false);
-      // 预诊带入
-      const [chiefComplaint, setChiefComplaint] = useState('咳嗽 3 天，伴发热 38.5°C');
-      const [presentIllness, setPresentIllness] = useState('3 天前受凉后出现阵发性咳嗽，夜间加重，影响睡眠，伴有黄色粘痰，体温最高 38.7°C。');
+      // 🆕 V2.4.0 改 3：主诉/现病史初值改空（医生开始接诊时空，触发 AI 诊断后才填）
+      const [chiefComplaint, setChiefComplaint] = useState('');
+      const [presentIllness, setPresentIllness] = useState('');
       // 🆕 诊断疾病（接受 AI 自动填 / 手动选）
       const [diagnoses, setDiagnoses] = useState([]);
       const [showDiseasePicker, setShowDiseasePicker] = useState(false);
@@ -570,19 +559,49 @@
 
       const allSymptoms = ['咳嗽', '咳痰', '发热', '乏力', '头痛', '鼻塞', '流涕', '咽痛', '气短', '胸痛', '腹痛', '腹泻', '便秘', '呕吐', '食欲减退', '失眠', '心悸', '出汗', '体重下降', '水肿', '皮疹', '瘙痒', '关节痛', '腰痛', '尿频', '尿急', '尿痛', '便血', '呕血', '咳血'];
       const allSigns = ['呼吸音延长', '肺部湿啰音', '肺部干啰音', '咽部充血', '扁桃体肿大', '淋巴结肿大', '肝脾肿大', '腹部压痛', '反跳痛', '肌紧张', '皮疹', '黄疸', '水肿', '紫绀', '苍白', '脱水征', '心律不齐', '心脏杂音', '血压升高', '血压降低'];
-      const recommendedTests = [
+      // 🆕 V2.4.0 改 5：推荐检查改 state（triggerAI 可重跑）
+      const [recommendedTests, setRecommendedTests] = useState([
         { name: '血常规', code: 'CBC', urgency: '常规', reason: '评估感染情况' },
         { name: 'C-反应蛋白', code: 'CRP', urgency: '常规', reason: '评估炎症程度' },
         { name: '胸部 X 光', code: 'CXR', urgency: '常规', reason: '排除肺炎' },
         { name: '降钙素原', code: 'PCT', urgency: '可选', reason: '鉴别细菌/病毒感染' },
         { name: '血气分析', code: 'ABG', urgency: '可选', reason: '评估氧合' },
-      ];
+      ]);
+      // 🆕 V2.4.0 改 5：AI 处置汇总改 state（推荐药物 + 非药物医嘱）
+      const [treatmentPlan, setTreatmentPlan] = useState({
+        medications: [
+          { name: '阿莫西林 500mg TID × 7天', allergy: '⚠️ 过敏 → 改头孢克肟' }
+        ],
+        nonDrug: '多饮水，保持空气湿润，避免烟雾粉尘，注意休息，症状加重立即复诊'
+      });
 
       const triggerAI = () => {
         setAiLoading(true);
         setTimeout(() => {
           setAiLoading(false);
           setAiResult(MOCK_AI_DIAGNOSES);
+          // 🆕 V2.4.0 改 5：触发 AI 诊断同时更新 5 个值
+          // 1. 主诉/现病史草稿（基于录音重跑）
+          setChiefComplaintDraft('咳嗽 3 天，伴发热 38.5°C，夜咳加重');
+          setPresentIllnessDraft('3 天前受凉后出现阵发性咳嗽，夜间加重影响睡眠，伴黄色粘痰，体温最高 38.7°C，伴气短。');
+          setChiefAccepted(false);
+          setPiAccepted(false);
+          // 2. 推荐检查（更新 + 重排优先级）
+          setRecommendedTests([
+            { name: '血常规', code: 'CBC', urgency: '常规', reason: '评估感染（优先）' },
+            { name: 'C-反应蛋白', code: 'CRP', urgency: '常规', reason: '评估炎症（优先）' },
+            { name: '胸部 X 光', code: 'CXR', urgency: '常规', reason: 'AI 重判：气短症状→优先' },
+            { name: '降钙素原', code: 'PCT', urgency: '可选', reason: '鉴别细菌/病毒' },
+            { name: '血气分析', code: 'ABG', urgency: '可选', reason: 'AI 重判：气短→必做' },
+          ]);
+          // 3. AI 处置汇总（重跑推荐药物 + 非药物医嘱）
+          setTreatmentPlan({
+            medications: [
+              { name: '头孢克肟 200mg BID × 7天', allergy: 'AI 替代：避免青霉素类' },
+              { name: '对乙酰氨基酚 500mg 必要时', allergy: '' }
+            ],
+            nonDrug: '多饮水，保持空气湿润，避免烟雾粉尘，注意休息，体温 > 38.5°C 或气短加重立即复诊'
+          });
         }, 1800);
       };
 
@@ -693,11 +712,8 @@
                 <Card>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-sm">📝 主诉与现病史</h3>
-                    {/* 🆕 V2.0.8 改：录音按钮已迁到右栏 AI 触发按钮左边，此处仅显示状态 */}
-                    <div className="text-[10px] text-gray-500">
-                      {recording ? <span className="text-status-red font-medium">🔴 录音中...</span> : transcribing ? <span className="text-ai-purple font-medium">⏳ AI 转写中...</span> : null}
+                    {/* 🆕 V2.4.0 改 1：删录音状态显示（按钮已迁到右栏，左栏不显示任何录音状态）*/}
                     </div>
-                  </div>
                   <div className="space-y-2">
                     <div>
                       <label className="text-xs text-gray-500">主诉 * <span className="text-ai-purple">· 预诊带入 · 可修改</span></label>
@@ -929,14 +945,17 @@
                 {/* 🆕 V2.0.7 改：💡 AI 处置建议汇总 移到右栏 AI 区最后 */}
                 <Card>
                   <h3 className="font-bold mb-2 text-sm">💡 AI 处置建议汇总</h3>
+                  {/* 🆕 V2.4.0 改 5：读 treatmentPlan state（triggerAI 可重跑）*/}
                   <div className="space-y-2 text-xs">
                     <div className="p-2 bg-med-blue-light border border-med-blue/30 rounded">
                       <div className="font-medium text-med-blue mb-0.5">推荐药物</div>
-                      <div>阿莫西林 500mg TID × 7 天 → <span className="text-status-red">⚠️ 过敏 → 改头孢克肟</span></div>
+                      {treatmentPlan.medications.map((m, i) => (
+                        <div key={i}>{m.name} {m.allergy && <span className="text-status-red">{m.allergy}</span>}</div>
+                      ))}
                     </div>
                     <div className="p-2 bg-status-green/5 border border-status-green/30 rounded">
                       <div className="font-medium text-status-green mb-0.5">非药物医嘱</div>
-                      <div className="text-gray-700">• 多饮水，保持空气湿润  • 避免烟雾粉尘  • 注意休息  • 症状加重立即复诊</div>
+                      <div className="text-gray-700">• {treatmentPlan.nonDrug}</div>
                     </div>
                   </div>
                 </Card>
