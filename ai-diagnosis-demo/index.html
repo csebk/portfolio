@@ -468,6 +468,8 @@
       const [showFollowupModal, setShowFollowupModal] = useState(false);
       // 🆕 V2.0.3 PRD 追溯气泡
       const [showPRDTrace, setShowPRDTrace] = useState(false);
+      // 🆕 V2.0.8 既往史折叠（默认折叠）
+      const [showHistory, setShowHistory] = useState(false);
 
       useEffect(() => {
         if (!recording) return;
@@ -587,6 +589,28 @@
                     <div><span className="text-gray-500">性别</span><div className="font-medium">女</div></div>
                     <div><span className="text-gray-500">过敏史</span><div className="font-medium text-status-red">⚠️ 青霉素</div></div>
                   </div>
+
+                  {/* 🆕 V2.0.8：既往史 9 类子字段 合并到患者信息块，默认折叠 */}
+                  <div className="mt-2.5 border-t pt-2">
+                    <button onClick={() => setShowHistory(!showHistory)} className="w-full flex items-center justify-between text-xs font-medium text-gray-700 hover:bg-gray-50 rounded px-1 py-0.5">
+                      <span>📋 既往史（9 类子字段）{showHistory ? '▼' : '▶'}</span>
+                      <span className="text-[10px] text-gray-500">档案库已带入 · {showHistory ? '点击折叠' : '点击展开'}</span>
+                    </button>
+                    {showHistory && (
+                      <div className="mt-2 space-y-1.5 text-xs">
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🤧 过敏史</span><div className="flex flex-wrap gap-1"><span className="bg-status-red text-white px-1.5 py-0.5 rounded-full text-[10px]">⚠️ 青霉素</span></div></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">💊 既往疾病史</span><input className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" placeholder="如：高血压 5 年" defaultValue="高血压 5 年" /></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🔪 手术外伤史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：2018 年阑尾炎手术"></textarea></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🩸 输血史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：2015 年产后输血"></textarea></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🦠 传染病史</span><div className="flex flex-wrap gap-1"><span className="bg-gray-100 px-1.5 py-0.5 rounded-full text-[10px] text-gray-400">无</span></div></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">💉 预防接种史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：乙肝疫苗三针完成" defaultValue="乙肝疫苗三针完成"></textarea></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🚬 个人史·烟酒</span><div className="flex flex-wrap gap-1"><span className="bg-gray-100 px-1.5 py-0.5 rounded-full text-[10px] text-gray-700">不吸烟</span><span className="bg-gray-100 px-1.5 py-0.5 rounded-full text-[10px] text-gray-700">偶尔饮酒</span></div></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🛡️ 职业暴露</span><div className="flex flex-wrap gap-1"><span className="bg-med-blue-light text-med-blue px-1.5 py-0.5 rounded-full text-[10px]">无特殊</span></div></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">👨‍👩‍👧 婚育史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：已婚，育 1 子 1 女" defaultValue="已婚，育 1 子 1 女"></textarea></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">👪 家族史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：父亲高血压" defaultValue="父亲高血压"></textarea></div>
+                      </div>
+                    )}
+                  </div>
                 </Card>
 
                 {/* 🆕 审 6：过敏高风险警示条 */}
@@ -603,25 +627,9 @@
                 <Card>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-sm">📝 主诉与现病史</h3>
-                    <div className="flex items-center gap-2">
-                      {recording ? (
-                        <button onClick={stopRecording} className="flex items-center gap-2 bg-status-red text-white rounded-full px-3 py-1.5 text-xs">
-                          <span className="w-2 h-2 bg-white rounded-full pulse-dot" />
-                          接诊录音中 · {String(Math.floor(recordSec/60)).padStart(2,'0')}:{String(recordSec%60).padStart(2,'0')} · 点 1 次关闭
-                        </button>
-                      ) : transcribing ? (
-                        <div className="flex items-center gap-1 bg-ai-purple-light border border-ai-purple/30 text-ai-purple rounded-full px-3 py-1.5 text-xs">
-                          <span className="spin">⏳</span> AI 正在转写...
-                        </div>
-                      ) : (
-                        // 📋 PRD §3.5 规则 [1 次开/1 次关] - US-MID-001
-                        <span id="tip-2" className="inline-flex items-center gap-1">
-                          <button onClick={startRecording} className="flex items-center gap-1 bg-med-blue text-white rounded-full px-3 py-1.5 text-xs">
-                            🎙️ 开始接诊录音
-                          </button>
-                          <Tip>为什么 1 次开/1 次关不是长按？医生双手操作电脑，1 次开 1 次关更自然（PRD §3.5 US-MID-001）</Tip>
-                        </span>
-                      )}
+                    {/* 🆕 V2.0.8 改：录音按钮已迁到右栏 AI 触发按钮左边，此处仅显示状态 */}
+                    <div className="text-[10px] text-gray-500">
+                      {recording ? <span className="text-status-red font-medium">🔴 录音中...</span> : transcribing ? <span className="text-ai-purple font-medium">⏳ AI 转写中...</span> : <span>👆 点右栏"🎙️ 录音"开始</span>}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -662,74 +670,7 @@
 
                 {/* 🆕 V2.0.7 改：推荐检查 → 移到右栏疑似诊断下方（详见右栏）*/}
 
-                {/* 🆕 V2.0.7 改：📋 既往史卡片（9 类子字段合并）*/}
-                <Card>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-sm">📋 既往史（9 类子字段）</h3>
-                    <span className="text-[10px] text-gray-500">自动带入 · 可手动改</span>
-                  </div>
-                  <div className="space-y-2 text-xs">
-                    {/* 2. 过敏史（标签） */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">🤧 过敏史</div>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="bg-status-red text-white px-2 py-0.5 rounded-full text-[10px]">⚠️ 青霉素</span>
-                      </div>
-                    </div>
-                    {/* 3. 既往疾病史（标签+文本） */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">💊 既往疾病史</div>
-                      <input className="w-full border rounded px-2 py-1 text-[11px]" placeholder="如：高血压 5 年、糖尿病 3 年" defaultValue="高血压 5 年" />
-                    </div>
-                    {/* 4. 手术外伤史 */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">🔪 手术外伤史</div>
-                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：2018 年阑尾炎手术" defaultValue=""></textarea>
-                    </div>
-                    {/* 5. 输血史 */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">🩸 输血史</div>
-                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：2015 年产后输血 400ml" defaultValue=""></textarea>
-                    </div>
-                    {/* 6. 传染病史（标签） */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">🦠 传染病史</div>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[10px] text-gray-400">无</span>
-                      </div>
-                    </div>
-                    {/* 7. 预防接种史 */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">💉 预防接种史</div>
-                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：乙肝疫苗三针完成" defaultValue="乙肝疫苗三针完成"></textarea>
-                    </div>
-                    {/* 8. 个人史·烟酒（标签） */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">🚬 个人史·烟酒</div>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[10px] text-gray-700">不吸烟</span>
-                        <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[10px] text-gray-700">偶尔饮酒</span>
-                      </div>
-                    </div>
-                    {/* 8b. 个人史·职业暴露（标签） */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">🛡️ 个人史·职业暴露</div>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="bg-med-blue-light text-med-blue px-2 py-0.5 rounded-full text-[10px]">无特殊</span>
-                      </div>
-                    </div>
-                    {/* 9. 婚育史 */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">👨‍👩‍👧 婚育史</div>
-                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：已婚，育 1 子 1 女" defaultValue="已婚，育 1 子 1 女"></textarea>
-                    </div>
-                    {/* 10. 家族史 */}
-                    <div>
-                      <div className="font-medium text-gray-700 mb-0.5">👪 家族史</div>
-                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：父亲高血压、母亲糖尿病" defaultValue="父亲高血压"></textarea>
-                    </div>
-                  </div>
-                </Card>
+                {/* 🆕 V2.0.8 改：📋 既往史 → 已合并到患者信息块（默认折叠）*/}
 
                 {/* 处方与医嘱 - 📋 PRD §7.5 规则 [过敏冲突实时警告] - US-MID-008 */}
                 <Card>
@@ -743,25 +684,9 @@
                   <div className="text-xs text-gray-500 mt-2">点击"开方"在弹窗中完成（过敏冲突实时警告）</div>
                 </Card>
 
-                {/* 🆕 审 3：AI 处置建议汇总（移自右栏）*/}
-                <Card>
-                  <h3 className="font-bold mb-2 text-sm">💡 AI 处置建议汇总</h3>
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2 bg-med-blue-light border border-med-blue/30 rounded">
-                      <div className="font-medium text-med-blue mb-0.5">推荐药物</div>
-                      <div>阿莫西林 500mg TID × 7 天 → <span className="text-status-red">⚠️ 过敏 → 改头孢克肟</span></div>
-                    </div>
-                    <div className="p-2 bg-status-green/5 border border-status-green/30 rounded">
-                      <div className="font-medium text-status-green mb-0.5">非药物医嘱</div>
-                      <div className="text-gray-700">• 多饮水，保持空气湿润  • 避免烟雾粉尘  • 注意休息  • 症状加重立即复诊</div>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* 🆕 审 4：底部三按钮并排 - 📋 PRD §8.5 规则 [基于诊断自动配 5 任务] - US-MID-010 */}
+                {/* 🆕 审 4：底部三按钮并排 → V2.0.8 改：去掉重复"💊 开方"按钮（处方与医嘱卡已有）*/}
                 <div id="tip-10" className="flex gap-2 pt-2 items-center">
                   <Button color="white" className="flex-1">📝 保存草稿</Button>
-                  <Button color="white" onClick={() => setShowRxModal(true)} className="flex-1">💊 开方（弹窗）</Button>
                   <span className="inline-flex items-center gap-1 flex-1">
                     <Button onClick={() => setShowFollowupModal(true)} className="flex-1">✅ 完成接诊 →</Button>
                     <Tip>为什么点完才配随访？医生看完才确认，避免随访任务配错（PRD §8.5 US-MID-010）</Tip>
@@ -769,42 +694,56 @@
                 </div>
               </div>
 
-              {/* 右 5/12：AI 诊断（V2.0.7 增：症状/体征·AI 处置建议汇总）*/}
+              {/* 右 5/12：AI 诊断（V2.0.8 改：症状/体征移到 AI 辅助诊断 h3 下面）*/}
               <div className="col-span-5 space-y-3">
-                {/* 🆕 V2.0.7 改：症状（语音识别·只读）移到 AI 区顶部上半部分 */}
-                <div className="bg-ai-purple/5 border border-ai-purple/30 rounded-lg p-2.5">
-                  <div className="text-xs font-bold text-ai-purple mb-1.5 flex items-center gap-1">🎙️ 症状（语音识别·只读）</div>
-                  {symptoms.length === 0 ? (
-                    <div className="text-[10px] text-gray-500 text-center py-1">⏳ 等待录音转写...</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {symptoms.map((s, i) => <span key={i} className="bg-ai-purple text-white px-2 py-0.5 rounded-full text-[10px]">{s}</span>)}
-                    </div>
-                  )}
-                </div>
-                {/* 🆕 V2.0.7 改：体征（语音识别·只读）*/}
-                <div className="bg-ai-purple/5 border border-ai-purple/30 rounded-lg p-2.5">
-                  <div className="text-xs font-bold text-ai-purple mb-1.5 flex items-center gap-1">🩺 体征（语音识别·只读）</div>
-                  {signs.length === 0 ? (
-                    <div className="text-[10px] text-gray-500 text-center py-1">⏳ 等待录音转写...</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {signs.map((s, i) => <span key={i} className="bg-ai-purple text-white px-2 py-0.5 rounded-full text-[10px]">{s}</span>)}
-                    </div>
-                  )}
-                </div>
-
                 {/* 🆕 审 2：AI 触发按钮移到卡片顶部 - 📋 PRD §6.5 规则 [手动触发 AI] - US-MID-003 */}
-                <div id="tip-4" className="flex items-center justify-between">
+                {/* 🆕 V2.0.8 改：录音按钮移到右栏 AI 触发按钮左边（横排）*/}
+                <div id="tip-4" className="flex items-center justify-between gap-2">
                   <h3 className="font-bold text-sm flex items-center gap-1"><span className="text-ai-purple">🤖</span> AI 辅助诊断
                     <Tip>为什么手动触发不是自动？医生想录完再触发，不想被打断（PRD §6.5 US-MID-003）</Tip>
                   </h3>
-                  <button onClick={triggerAI} disabled={aiLoading} className="bg-ai-purple text-white rounded-lg px-3 py-1.5 text-xs disabled:opacity-50 font-medium">
-                    {aiLoading ? '⏳ AI 推理中...' : '🤖 触发 AI 诊断'}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {/* 📋 PRD §3.5 规则 [1 次开/1 次关] - US-MID-001 - 🆕 V2.0.8 录音按钮从左栏迁到此处 */}
+                    {recording ? (
+                      <span id="tip-2" className="inline-flex items-center gap-1">
+                        <button onClick={stopRecording} className="flex items-center gap-1.5 bg-status-red text-white rounded-lg px-2.5 py-1.5 text-xs">
+                          <span className="w-2 h-2 bg-white rounded-full pulse-dot" />
+                          🔴 录音中 {String(Math.floor(recordSec/60)).padStart(2,'0')}:{String(recordSec%60).padStart(2,'0')}
+                        </button>
+                        <Tip>为什么 1 次开/1 次关不是长按？医生双手操作电脑，1 次开 1 次关更自然（PRD §3.5 US-MID-001）</Tip>
+                      </span>
+                    ) : transcribing ? (
+                      <span className="flex items-center gap-1 bg-ai-purple-light border border-ai-purple/30 text-ai-purple rounded-lg px-2.5 py-1.5 text-xs">
+                        <span className="spin">⏳</span> AI 转写中...
+                      </span>
+                    ) : (
+                      <span id="tip-2" className="inline-flex items-center gap-1">
+                        <button onClick={startRecording} className="flex items-center gap-1 bg-med-blue text-white rounded-lg px-2.5 py-1.5 text-xs font-medium">
+                          🎙️ 录音
+                        </button>
+                        <Tip>为什么 1 次开/1 次关不是长按？医生双手操作电脑，1 次开 1 次关更自然（PRD §3.5 US-MID-001）</Tip>
+                      </span>
+                    )}
+                    <button onClick={triggerAI} disabled={aiLoading} className="bg-ai-purple text-white rounded-lg px-3 py-1.5 text-xs disabled:opacity-50 font-medium">
+                      {aiLoading ? '⏳ AI 推理中...' : '🤖 触发 AI 诊断'}
+                    </button>
+                  </div>
                 </div>
 
                 <Card>
+                  {/* 🆕 V2.0.8 改：症状 + 体征（语音识别·只读）合并到一行显示，放在 AI 辅助诊断 h3 下面 */}
+                  <div className="bg-ai-purple/5 border border-ai-purple/30 rounded-lg p-2 mb-2">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-bold text-ai-purple mb-0.5">🎙️ 症状（只读）</div>
+                        {symptoms.length === 0 ? <div className="text-[9px] text-gray-500">⏳ 等待转写</div> : <div className="flex flex-wrap gap-0.5">{symptoms.slice(0,4).map((s,i) => <span key={i} className="bg-ai-purple text-white px-1.5 py-0 rounded text-[9px]">{s}</span>)}{symptoms.length > 4 && <span className="text-[9px] text-gray-500">+{symptoms.length-4}</span>}</div>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-bold text-ai-purple mb-0.5">🩺 体征（只读）</div>
+                        {signs.length === 0 ? <div className="text-[9px] text-gray-500">⏳ 等待转写</div> : <div className="flex flex-wrap gap-0.5">{signs.slice(0,4).map((s,i) => <span key={i} className="bg-ai-purple text-white px-1.5 py-0 rounded text-[9px]">{s}</span>)}{signs.length > 4 && <span className="text-[9px] text-gray-500">+{signs.length-4}</span>}</div>}
+                      </div>
+                    </div>
+                  </div>
                   {!aiLoading && !aiResult && (
                     <div className="text-xs text-gray-500 p-4 bg-gray-50 rounded text-center">
                       💡 录完主诉/现病史后点上方"🤖 触发 AI 诊断"<br />系统将给出 Top 3 疑似诊断
