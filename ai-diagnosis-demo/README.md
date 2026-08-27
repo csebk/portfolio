@@ -238,10 +238,10 @@ demo/
 | **底部操作** | 2 按钮（保存/完成）| **3 按钮并排**（保存/开方/完成）|
 | **P-2 未登录** | 3 入口（扫码/手机/验证码）| **2 入口**（扫码/手机+验证码合一）|
 | **工作台入口** | "字典管理" | **"异常演示"**（与菜单一致）|
-| **PRD 集成** | 无 | **V2.0.3 简化版**：①PRD 末尾"📺 demo 演示路径" ②demo P3 6 处 `// PRD §X.X` 注释 ③P3 右上角"💡 PRD 追溯"气泡 | **V2.0.4 升级**：④PRD 顶部"V2.0.4 demo 集成" 14 条规则全表 ⑤demo 14 个 💡 悬浮提示（hover 即可看"为什么这样设计"）| **V2.0.5 升级**：⑥左抽屉"📋 PRD 规则树"（240px 紫边·可折叠）14 条规则可点 📍 跳到 demo 对应位置+紫色脉冲 1.5s | **V2.0.6 升级**：⑦单一真相源 `prd_data.json`（4 类数据）+ 同步脚本 `sync_prd.js`（Node 22+）+ TopNav 角标实时显示 JSON 版本 | **V2.0.7 升级**：⑧PRD §3.3 病历字段全子项（9 类既往史 + 初步诊断 + 症状/体征只读移到 AI 区 + 特殊要求备注）| **V2.0.8 升级**：⑨左栏 AI 处置建议汇总删除（保留右栏唯一） ⑩既往史 9 类合并到患者信息块内（默认折叠） ⑪录音按钮移到右栏 AI 触发按钮左边（横排） ⑫症状/体征合并到 AI 辅助诊断 h3 下面 ⑬去掉底部重复"💊 开方"按钮 | **V2.0.9 升级**：⑭demo 3 个硬编码常量（STATUS_META / MOCK_DISEASE_LIBRARY / RULES_TREE）改读 `window.__PRD__` + 同步 XHR 保证 React 渲染前就绪 + 真正消除硬编码漂移 |
+| **PRD 集成** | 无 | **V2.0.3 简化版**：①PRD 末尾"📺 demo 演示路径" ②demo P3 6 处 `// PRD §X.X` 注释 ③P3 右上角"💡 PRD 追溯"气泡 | **V2.0.4 升级**：④PRD 顶部"V2.0.4 demo 集成" 14 条规则全表 ⑤demo 14 个 💡 悬浮提示（hover 即可看"为什么这样设计"）| **V2.0.5 升级**：⑥左抽屉"📋 PRD 规则树"（240px 紫边·可折叠）14 条规则可点 📍 跳到 demo 对应位置+紫色脉冲 1.5s | **V2.0.6 升级**：⑦单一真相源 `prd_data.json`（4 类数据）+ 同步脚本 `sync_prd.js`（Node 22+）+ TopNav 角标实时显示 JSON 版本 | **V2.0.7 升级**：⑧PRD §3.3 病历字段全子项（9 类既往史 + 初步诊断 + 症状/体征只读移到 AI 区 + 特殊要求备注）| **V2.0.8 升级**：⑨左栏 AI 处置建议汇总删除（保留右栏唯一） ⑩既往史 9 类合并到患者信息块内（默认折叠） ⑪录音按钮移到右栏 AI 触发按钮左边（横排） ⑫症状/体征合并到 AI 辅助诊断 h3 下面 ⑬去掉底部重复"💊 开方"按钮 | **V2.0.9 升级**：⑭demo 3 个硬编码常量（STATUS_META / MOCK_DISEASE_LIBRARY / RULES_TREE）改读 `window.__PRD__` + 同步 XHR 保证 React 渲染前就绪 + 真正消除硬编码漂移 | **V2.1.0 升级**：⑮`sync_prd.js demo-default` 命令：用 Node vm 反向扫描 demo 源码抽 MOCK_PATIENTS / MOCK_FOLLOWUP_PATIENTS / 9 类既往史默认值到 JSON ⑯MOCK_PATIENTS / MOCK_FOLLOWUP_PATIENTS 改读 `window.__PRD__.demo_data` ⑰getPrd 支持嵌套路径（`demo_data.patients`） ⑱既往史 4 类默认值（既往疾病/预防接种/婚育/家族）改读 JSON |
 
 ---
 
-*最后更新：2026-08-27 V2.0.9*
+*最后更新：2026-08-27 V2.1.0*
 *作者：仲超*
 *配套：需求分析 V2.0 / PRD V2.0（V2.0.7 §3.3 病历字段补全 18 项 + V2.0.5 第二阶段 + V2.0.6 双向追溯 + 末尾"📺 demo 演示路径"）/ index.html（V2.0.7）/ `demo/js/prd_data.json`（4 类·V2.0.7 新增 history_8+symptoms+signs+test_notes）/ `sync_prd.js`*

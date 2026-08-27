@@ -69,11 +69,19 @@
 
     // 🆕 V2.0.9 getPrd helper（移到这里避免 TDZ：getPrd 在 STATUS_META 之前声明）
     // 用法：const STATUS_META = getPrd('status_meta', FALLBACK_STATUS_META);
-    const getPrd = (key, fallback) => {
-      if (typeof window !== 'undefined' && window.__PRD__ && window.__PRD__[key]) {
-        return window.__PRD__[key];
+    // 🆕 V2.1.0 getPrd 支持嵌套路径（demo_data.patients）
+    const getPrd = (path, fallback) => {
+      if (typeof window === 'undefined' || !window.__PRD__) return fallback;
+      const keys = path.split('.');
+      let cur = window.__PRD__;
+      for (const k of keys) {
+        if (cur && typeof cur === 'object' && k in cur && cur[k] !== null && cur[k] !== undefined) {
+          cur = cur[k];
+        } else {
+          return fallback;
+        }
       }
-      return fallback;
+      return cur;
     };
 
     // ========== 假数据（V2.0 · 诊疗流程状态机）==========
@@ -94,13 +102,14 @@
       archived:         { label: '⚫ 已归档',         color: 'text-gray-500',      bg: 'bg-gray-100' },
     });
 
-    const MOCK_PATIENTS = [
+    // 🆕 V2.1.0 MOCK_PATIENTS 改读 window.__PRD__.demo_data.patients
+    const MOCK_PATIENTS = getPrd('demo_data.patients', [
       { id: 1, name: '王秀英', age: 65, gender: '女', phone: '138****5566', diagnosis: '急性支气管炎', allergy: ['青霉素'], risk: 'high', status: 'awaiting_test',    lastVisit: '10分钟前' },
       { id: 2, name: '张楠',   age: 65, gender: '男', phone: '139****1234', diagnosis: '急性支气管炎', allergy: [],         risk: 'high', status: 'consulting',       lastVisit: '20分钟前' },
       { id: 3, name: '展羽琳', age: 72, gender: '女', phone: '136****5678', diagnosis: '高血压',         allergy: [],         risk: 'low',  status: 'dispensed',        lastVisit: '1小时前' },
       { id: 4, name: '胡玲玲', age: 54, gender: '女', phone: '135****9012', diagnosis: '糖尿病',         allergy: [],         risk: 'low',  status: 'waiting',          lastVisit: '2小时前' },
       { id: 5, name: '刘美丽', age: 23, gender: '女', phone: '137****3456', diagnosis: '急性胃肠炎',     allergy: [],         risk: 'mid',  status: 'pre_diagnosis',    lastVisit: '—' },
-    ];
+    ]);
 
     const MOCK_AI_DIAGNOSES = [
       { name: '急性支气管炎', confidence: 78, severity: 'normal', reasoning: '主述咳嗽 3 天/夜咳 5 天，符合典型症状', source: 'xx院士团队模型' },
@@ -108,13 +117,14 @@
       { name: '胃食管反流病', confidence: 32, severity: 'normal', reasoning: '需进一步检查方可确认', source: 'xx院士团队模型', needsMoreInfo: true },
     ];
 
-    const MOCK_FOLLOWUP_PATIENTS = [
+    // 🆕 V2.1.0 MOCK_FOLLOWUP_PATIENTS 改读 window.__PRD__.demo_data.followups
+    const MOCK_FOLLOWUP_PATIENTS = getPrd('demo_data.followups', [
       { id: 1, name: '王秀英', age: 65, risk: 'high',   riskCount: 2, status: 'critical_value',  lastAI: '10分钟前' },
       { id: 2, name: '张楠',   age: 65, risk: 'high',   riskCount: 2, status: 'followup_active', lastAI: '20分钟前' },
       { id: 3, name: '展羽琳', age: 72, risk: 'low',    riskCount: 0, status: 'followup_active', lastAI: '1小时前' },
       { id: 4, name: '胡玲玲', age: 54, risk: 'low',    riskCount: 0, status: 'followup_active', lastAI: '2小时前' },
       { id: 5, name: '刘美丽', age: 23, risk: 'mid',    riskCount: 1, status: 'recall_pending',  lastAI: '—' },
-    ];
+    ]);
 
     // ========== 通用组件 ==========
     const TopNav = ({ current }) => (
@@ -615,15 +625,15 @@
                     {showHistory && (
                       <div className="mt-2 space-y-1.5 text-xs">
                         <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🤧 过敏史</span><div className="flex flex-wrap gap-1"><span className="bg-status-red text-white px-1.5 py-0.5 rounded-full text-[10px]">⚠️ 青霉素</span></div></div>
-                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">💊 既往疾病史</span><input className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" placeholder="如：高血压 5 年" defaultValue="高血压 5 年" /></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">💊 既往疾病史</span><input className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" placeholder="如：高血压 5 年" defaultValue={getPrd('demo_data.history_defaults.past_disease', '高血压 5 年')} /></div>
                         <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🔪 手术外伤史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：2018 年阑尾炎手术"></textarea></div>
                         <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🩸 输血史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：2015 年产后输血"></textarea></div>
                         <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🦠 传染病史</span><div className="flex flex-wrap gap-1"><span className="bg-gray-100 px-1.5 py-0.5 rounded-full text-[10px] text-gray-400">无</span></div></div>
-                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">💉 预防接种史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：乙肝疫苗三针完成" defaultValue="乙肝疫苗三针完成"></textarea></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">💉 预防接种史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：乙肝疫苗三针完成" defaultValue={getPrd('demo_data.history_defaults.vaccination', '乙肝疫苗三针完成')}></textarea></div>
                         <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🚬 个人史·烟酒</span><div className="flex flex-wrap gap-1"><span className="bg-gray-100 px-1.5 py-0.5 rounded-full text-[10px] text-gray-700">不吸烟</span><span className="bg-gray-100 px-1.5 py-0.5 rounded-full text-[10px] text-gray-700">偶尔饮酒</span></div></div>
                         <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">🛡️ 职业暴露</span><div className="flex flex-wrap gap-1"><span className="bg-med-blue-light text-med-blue px-1.5 py-0.5 rounded-full text-[10px]">无特殊</span></div></div>
-                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">👨‍👩‍👧 婚育史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：已婚，育 1 子 1 女" defaultValue="已婚，育 1 子 1 女"></textarea></div>
-                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">👪 家族史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：父亲高血压" defaultValue="父亲高血压"></textarea></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">👨‍👩‍👧 婚育史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：已婚，育 1 子 1 女" defaultValue={getPrd('demo_data.history_defaults.marriage', '已婚，育 1 子 1 女')}></textarea></div>
+                        <div className="flex gap-2"><span className="text-gray-500 w-24 flex-shrink-0">👪 家族史</span><textarea className="flex-1 border rounded px-1.5 py-0.5 text-[11px]" rows="1" placeholder="如：父亲高血压" defaultValue={getPrd('demo_data.history_defaults.family', '父亲高血压')}></textarea></div>
                       </div>
                     )}
                   </div>
