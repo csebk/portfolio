@@ -1,9 +1,37 @@
-# AI 辅助问诊 Demo（V2.0）
+# AI 辅助问诊 Demo（V2.0.3）
 
+> **🌐 在线访问**：[https://csebk.github.io/portfolio/ai-diagnosis-demo/](https://csebk.github.io/portfolio/ai-diagnosis-demo/)
+> **📦 GitHub 仓库**：[github.com/csebk/portfolio/tree/main/ai-diagnosis-demo](https://github.com/csebk/portfolio/tree/main/ai-diagnosis-demo)
+>
 > **项目**：AI 辅助问诊与智能随访系统 V2.0
-> **版本**：v2.0.0
+> **版本**：v2.0.3
 > **作者**：仲超（9 年 AI/医疗产品经理 + 前端原型设计师）
 > **配套**：PRD V2.0 / 需求分析 V2.0 / Demo 设计规划 V2.0
+
+---
+
+## 📸 演示截图
+
+### 工作台首页
+![Dashboard](screenshots/01_dashboard.png)
+
+### 接诊中（V2.0.2 一页式·左右分栏）
+![接诊中](screenshots/02_emr_new.png)
+
+### AI 诊断触发后（Top 3 + 文字按钮）
+![AI 诊断](screenshots/02b_emr_with_ai.png)
+
+### AI 采纳 → 自动填诊断疾病
+![诊断疾病](screenshots/02c_emr_diagnoses_filled.png)
+
+### V2.0.3 新增：💡 PRD 追溯气泡
+![PRD 追溯](screenshots/02e_emr_prd_trace_open.png)
+
+### 患者端 AI 预诊（手机壳 UI）
+![预诊](screenshots/06_pre_diagnosis.png)
+
+### 挂号确认（先医院后科室 3 段式）
+![挂号](screenshots/08_register.png)
 
 ---
 

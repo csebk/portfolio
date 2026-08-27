@@ -33,6 +33,7 @@
     <li><a href="yinfa-prd.html">银发管家 PRD（已上线 demo）</a></li>
     <li><a href="yanglao-prd.html">养老AI助手 PRD</a></li>
     <li><a href="shanzhi-qa.html">善智星语 Q&A（30+问答）</a></li>
+    <li><a href="ai-diagnosis-demo/" target="_blank">🆕 AI 辅助问诊 demo（明品 2025.09-12）→</a></li>
   </ul>
 
   <h3>📚 副牌 · 教育AI 探索</h3>
@@ -63,6 +64,7 @@
 <li>3.1 <a href="#31-案例一慢病管理-ai-助手c端--已上线公网-demo">案例一：慢病管理 AI 助手（C端 · 已上线公网 demo）</a></li>
 <li>3.2 <a href="#32-案例二医生慢病管理-saasb端--0-1-新写--完整-prd">案例二：医生慢病管理 SaaS（B端 · 0-1 新写 · 完整 PRD）</a></li>
 <li>3.3 <a href="#33-案例三医疗大模型产品明品医学-4-年实战--善智星语">案例三：医疗大模型产品（明品医学 4 年实战 · 善智星语）</a></li>
+<li>3.4 🆕 <a href="#34-ai">案例四：AI 辅助问诊 demo（明品 2025.09-12 实战原型 · 已上线 GitHub Pages）</a></li>
 <li><a href="#4-副牌--教育-ai-探索">副牌 · 教育 AI 探索</a></li>
 <li>4.1 <a href="#41-诚实声明">诚实声明</a></li>
 <li>4.2 <a href="#42-k12-课堂ai学习伴侣classmate-ai">K12 课堂AI学习伴侣（ClassMate AI）</a></li>
@@ -774,6 +776,47 @@
 <li>善智星语面试 Q&amp;A：https://csebk.github.io/portfolio/shanzhi-qa.html（587 行 · 29KB · 30+ 面试问答）</li>
 <li>医疗AI产品案例集：https://csebk.github.io/portfolio/medical-cases.html（669 行 · 37KB · 3 案例完整）</li>
 </ul>
+<h3 id="34-ai">3.4 案例四：AI 辅助问诊 demo（医生端·明品项目 2025.09-12 实战原型）</h3>
+<blockquote>
+<p><strong>🌐 在线 demo</strong>：<a href="https://csebk.github.io/portfolio/ai-diagnosis-demo/">https://csebk.github.io/portfolio/ai-diagnosis-demo/</a>（<strong>已上线 GitHub Pages · 任何设备可访问</strong>）<br />
+<strong>完整文档</strong>：<a href="https://csebk.github.io/portfolio/ai-diagnosis-demo/README.md">demo/README.md</a>（V2.0.3 · 14 路由 · 8 分钟演示流程）<br />
+<strong>PRD V2.0</strong>：660 行 · 12 大模块 · <a href="https://csebk.github.io/portfolio/ai-diagnosis-demo/">末尾"📺 demo 演示路径"小节</a></p>
+</blockquote>
+<h4 id="_17">项目背景</h4>
+<p><strong>真实经历</strong>：2025.09-12 在明品医学参与<strong>基层诊所 AI 辅助问诊系统</strong>产品设计（独立 Web 系统，未对接 HIS/EMR），MVP 阶段医生手动复制粘贴数据。<br />
+<strong>项目定位</strong>：基层医保一体机（村卫生室/社区诊所），帮助 50+ 岁医生降低漏诊/误诊率，提升效率 30%+。</p>
+<p><strong>项目亮点</strong>：<br />
+- 完整诊前 + 诊中 + 诊后三段式（V2.0.0 全流程重构，<strong>不是单页 demo</strong>）<br />
+- 14 个页面路由：诊前 3（预诊/追问/挂号）+ 诊中 5（接诊/AI/检查/危急值/处方）+ 诊后 5（随访/统计/异常演示）+ 工作台 1<br />
+- 一页式接诊（医生习惯不跳页）：左右分栏 7:5 + 3 弹窗 + 1 录音 + 1 触发按钮 + 1 决策汇总<br />
+- 12 种诊疗流程状态码（替代传统 online/offline）<br />
+- V2.0.3 新增：💡 PRD 追溯气泡（开发边看 demo 边查 PRD 章节号）</p>
+<h4 id="_18">核心设计决策（3 个"反常识"）</h4>
+<ul>
+<li><strong>患者端只给科室建议</strong>（不开方）——规避监管风险，让医生做最终决策</li>
+<li><strong>诊中分流"开检查单"自动释放号源</strong>（不锁定）——基层号源紧张，锁号会被医生直接放弃</li>
+<li><strong>检查结果回流后 AI 二次解读</strong>（V2.0 差异化卖点）——90% 基层诊所有检查但没 AI 解读能力</li>
+</ul>
+<h4 id="_19">作品展示</h4>
+<ul>
+<li>🌐 <strong>在线 demo（已部署 GitHub Pages）</strong>：<a href="https://csebk.github.io/portfolio/ai-diagnosis-demo/">https://csebk.github.io/portfolio/ai-diagnosis-demo/</a></li>
+<li>📦 <strong>GitHub 源码</strong>：<a href="https://github.com/csebk/portfolio/tree/main/ai-diagnosis-demo">github.com/csebk/portfolio/tree/main/ai-diagnosis-demo</a></li>
+<li>📋 <strong>14 路由演示流程</strong>：登录 → 工作台 → 接诊中（V2.0.2 一页式）→ AI 诊断 → 检查单 → 处方 → 随访</li>
+</ul>
+<h4 id="_20">8 分钟完整演示流程（附话术）</h4>
+<table>
+<thead>
+<tr><th>时间点</th><th>演示动作</th><th>PM 关键话术</th></tr></thead>
+<tbody>
+<tr><td>0:30</td><td>演示 AI 追问</td><td><strong>30 秒挂对科，节省 5 分钟分诊</strong></td></tr>
+<tr><td>2:30</td><td>演示录音 1 次开/关</td><td><strong>医生双手自由，不用边问边打字</strong></td></tr>
+<tr><td>3:00</td><td>演示手动触发 AI</td><td><strong>医生掌控节奏，AI 不打断</strong></td></tr>
+<tr><td>3:30</td><td>演示 Top 3 + 三按钮</td><td><strong>AI 不只下诊断，还给 5 项检查建议</strong></td></tr>
+<tr><td>4:00</td><td>演示开方弹窗</td><td><strong>过敏冲突实时警告——临床安全底线</strong></td></tr>
+<tr><td>4:30</td><td>演示诊中分流弹窗</td><td><strong>医生开完检查单就让位，下一个患者进诊间</strong></td></tr>
+<tr><td>7:30</td><td>演示危急值</td><td><strong>4 通道强推 + 30 分钟已读——漏看就是人命</strong></td></tr>
+</tbody>
+</table>
 <hr />
 <h2 id="4-ai">4. 副牌 · 教育 AI 探索</h2>
 <h3 id="41">4.1 诚实声明</h3>
