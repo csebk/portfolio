@@ -72,7 +72,7 @@
 
     // 🆕 V2.0.9 getPrd helper（移到这里避免 TDZ：getPrd 在 STATUS_META 之前声明）
     // 用法：const STATUS_META = getPrd('status_meta', FALLBACK_STATUS_META);
-    // 🆕 V2.1.0 getPrd 支持嵌套路径（demo_data.patients）
+    // 🆕 V2.3.0 getPrd 增强：支持 status_meta 自动合并 fallback（保证 fallback 的所有 code 都生效）
     const getPrd = (path, fallback) => {
       if (typeof window === 'undefined' || !window.__PRD__) return fallback;
       const keys = path.split('.');
@@ -83,6 +83,10 @@
         } else {
           return fallback;
         }
+      }
+      // 🆕 V2.3.0：如果是 status_meta 路径且有 fallback，合并 JSON + fallback（fallback 优先缺失的 code）
+      if (path === 'status_meta' && fallback && typeof cur === 'object') {
+        return { ...cur, ...fallback };
       }
       return cur;
     };
@@ -471,15 +475,15 @@
               </div>
             </div>
           )}
-          {/* 🆕 V2.2.0 改 1：收起态按钮（24px 侧边 + ▶ 展开）*/}
+          {/* 🆕 V2.3.0 改 A：短紫块（40px 高 + 12 边距）替代 24px 全屏紫条 */}
           {!open && (
             <button
               onClick={() => setOpen(true)}
-              className="w-6 h-screen bg-ai-purple text-white text-xs hover:bg-ai-purple/80 flex flex-col items-center justify-center"
+              className="w-12 h-10 mt-2 bg-ai-purple text-white text-base hover:bg-ai-purple/80 flex items-center justify-center rounded-r shadow-md"
               style={{ pointerEvents: 'auto' }}
               title="展开 PRD 规则树"
             >
-              ▶
+              📋
             </button>
           )}
         </div>
@@ -493,9 +497,14 @@
     //                / US-MID-006（检查回流）/ US-MID-007（结果关联）/ US-MID-009（边界 24h）
     // 改本组件前必看：PRD V2.0 末尾"📺 demo 演示路径"小节
     const EMREditPage = () => {
-      // 🆕 V2.2.0 改 4：主诉/现病史草稿（录音完成后填入，医生点"接受"才追加到左栏）
-      const [chiefComplaintDraft, setChiefComplaintDraft] = useState('');
-      const [presentIllnessDraft, setPresentIllnessDraft] = useState('');
+      // 🆕 V2.3.0 改 D：预诊带入 + AI 语义合并
+      // - 初始 state 就有预诊摘要（不再"⏳ 录音完成后填充"）
+      // - 录音后更新；接受时 AI 语义合并到左栏；草稿保留（加 ✅ 标记）
+      const [chiefComplaintDraft, setChiefComplaintDraft] = useState('咳嗽 3 天，伴发热 38.5°C');
+      const [presentIllnessDraft, setPresentIllnessDraft] = useState('3 天前受凉后出现阵发性咳嗽，夜间加重，影响睡眠，伴有黄色粘痰，体温最高 38.7°C。');
+      // 🆕 V2.3.0 接受标记（true=已合并到左栏）
+      const [chiefAccepted, setChiefAccepted] = useState(false);
+      const [piAccepted, setPiAccepted] = useState(false);
       // 🆕 V2.0.7 体征（语音识别·只读）默认带几条便于演示
       const [signs, setSigns] = useState(['呼吸音延长', '肺部湿啰音']);
       const [aiLoading, setAiLoading] = useState(false);
@@ -536,9 +545,11 @@
         setRecording(false);
         setTranscribing(true);
         setTimeout(() => {
-          // 🆕 V2.2.0 改 4：录音完成只填右栏草稿（待确认），医生点"接受"才追加到左栏
+          // 🆕 V2.3.0 改 D：录音完成更新右栏草稿 + 接受标记清掉（新一轮）
           setChiefComplaintDraft('咳嗽 3 天，伴发热 38.5°C，夜咳加重');
           setPresentIllnessDraft('3 天前受凉后出现阵发性咳嗽，夜间加重影响睡眠，伴黄色粘痰，体温最高 38.7°C，伴气短。');
+          setChiefAccepted(false);
+          setPiAccepted(false);
           setTranscribing(false);
         }, 1800);
       };
@@ -684,7 +695,7 @@
                     <h3 className="font-bold text-sm">📝 主诉与现病史</h3>
                     {/* 🆕 V2.0.8 改：录音按钮已迁到右栏 AI 触发按钮左边，此处仅显示状态 */}
                     <div className="text-[10px] text-gray-500">
-                      {recording ? <span className="text-status-red font-medium">🔴 录音中...</span> : transcribing ? <span className="text-ai-purple font-medium">⏳ AI 转写中...</span> : <span>👆 点右栏"🎙️ 录音"开始</span>}
+                      {recording ? <span className="text-status-red font-medium">🔴 录音中...</span> : transcribing ? <span className="text-ai-purple font-medium">⏳ AI 转写中...</span> : null}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -732,7 +743,8 @@
                   <div id="tip-9" className="flex items-center justify-between">
                     <h3 className="font-bold text-sm">💊 处方与医嘱</h3>
                     <span className="inline-flex items-center gap-1">
-                      <button onClick={() => setShowRxModal(true)} className="bg-med-blue text-white rounded-lg px-3 py-1.5 text-xs font-medium">💊 开方（弹窗）→</button>
+                      {/* 🆕 V2.3.0 改 C：去"弹窗"+箭头 */}
+                      <button onClick={() => setShowRxModal(true)} className="bg-med-blue text-white rounded-lg px-3 py-1.5 text-xs font-medium">💊 开方</button>
                       <Tip>为什么弹窗不是新页面？医生习惯一气呵成，不跳页（PRD §7.5）</Tip>
                     </span>
                   </div>
@@ -786,58 +798,61 @@
                 </div>
 
                 <Card>
-                  {/* 🆕 V2.2.0 改 4：右栏"主诉/现病史"（待确认）— 录音完成后只改这里，医生点"接受"才追加到左栏 */}
+                  {/* 🆕 V2.3.0 改 D：右栏"主诉/现病史"（AI 语义合并·待确认/已接受） */}
                   <div className="bg-ai-purple/5 border border-ai-purple/30 rounded-lg p-2 mb-2">
                     <div className="flex items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="text-[10px] font-bold text-ai-purple mb-0.5 flex items-center gap-1">
-                          🎙️ 主诉（待确认）
-                          {chiefComplaintDraft && (
+                          🎙️ 主诉 {chiefAccepted ? '✅' : '（待确认）'}
+                          {chiefComplaintDraft && !chiefAccepted && (
                             <button
                               onClick={() => {
-                                // 追加到左栏（用户要求 2B：接受后追加）
+                                // 🆕 V2.3.0 改 D：AI 语义合并（伪 AI 合并规则）+ 保留草稿
                                 const ta = document.querySelector('textarea[data-field="chief_complaint"]');
                                 if (ta) {
                                   const oldVal = ta.value;
-                                  ta.value = oldVal ? oldVal + '；' + chiefComplaintDraft : chiefComplaintDraft;
-                                  // 触发 React onChange
+                                  // AI 合并 = 原值 + "；" + AI 补充：" + 草稿
+                                  const merged = oldVal ? oldVal + '；AI 补充：' + chiefComplaintDraft : chiefComplaintDraft;
+                                  ta.value = merged;
                                   const ev = new Event('input', { bubbles: true });
                                   ta.dispatchEvent(ev);
                                 }
-                                setChiefComplaintDraft('');
+                                // 接受标记 = true（草稿保留，加 ✅）
+                                setChiefAccepted(true);
                               }}
                               className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
-                              title="接受并追加到左栏主诉"
+                              title="AI 语义合并到左栏主诉（不清空）"
                             >✅ 接受</button>
                           )}
                         </div>
                         {chiefComplaintDraft ? (
-                          <div className="text-[10px] text-gray-800 leading-snug bg-white p-1 rounded border border-ai-purple/20">{chiefComplaintDraft}</div>
-                        ) : <div className="text-[9px] text-gray-500">⏳ 录音完成后填充</div>}
+                          <div className={`text-[10px] leading-snug bg-white p-1 rounded border ${chiefAccepted ? 'border-status-green/50 bg-status-green/5' : 'border-ai-purple/20'}`}>{chiefComplaintDraft}</div>
+                        ) : <div className="text-[9px] text-gray-500">⏳ 等待预诊</div>}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[10px] font-bold text-ai-purple mb-0.5 flex items-center gap-1">
-                          📋 现病史（待确认）
-                          {presentIllnessDraft && (
+                          📋 现病史 {piAccepted ? '✅' : '（待确认）'}
+                          {presentIllnessDraft && !piAccepted && (
                             <button
                               onClick={() => {
                                 const ta = document.querySelector('textarea[data-field="present_illness"]');
                                 if (ta) {
                                   const oldVal = ta.value;
-                                  ta.value = oldVal ? oldVal + '；' + presentIllnessDraft : presentIllnessDraft;
+                                  const merged = oldVal ? oldVal + '；AI 补充：' + presentIllnessDraft : presentIllnessDraft;
+                                  ta.value = merged;
                                   const ev = new Event('input', { bubbles: true });
                                   ta.dispatchEvent(ev);
                                 }
-                                setPresentIllnessDraft('');
+                                setPiAccepted(true);
                               }}
                               className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
-                              title="接受并追加到左栏现病史"
+                              title="AI 语义合并到左栏现病史（不清空）"
                             >✅ 接受</button>
                           )}
                         </div>
                         {presentIllnessDraft ? (
-                          <div className="text-[10px] text-gray-800 leading-snug bg-white p-1 rounded border border-ai-purple/20">{presentIllnessDraft}</div>
-                        ) : <div className="text-[9px] text-gray-500">⏳ 录音完成后填充</div>}
+                          <div className={`text-[10px] leading-snug bg-white p-1 rounded border ${piAccepted ? 'border-status-green/50 bg-status-green/5' : 'border-ai-purple/20'}`}>{presentIllnessDraft}</div>
+                        ) : <div className="text-[9px] text-gray-500">⏳ 等待预诊</div>}
                       </div>
                     </div>
                   </div>

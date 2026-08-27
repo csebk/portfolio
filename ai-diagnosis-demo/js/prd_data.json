@@ -1,5 +1,5 @@
 {
-  "version": "V2.2.0",
+  "version": "V2.3.0",
   "description": "AI 辅助问诊 demo · 双向追溯数据源（JSON ↔ PRD md 唯一真相）",
   "last_updated": "2026-08-27",
   "rules": [
@@ -224,6 +224,14 @@
       "label": "失访",
       "color": "gray",
       "icon": "✕"
+    },
+    "_🆕 V2.3.0 补全 6 个 code（demo fallback 对齐）": {
+      "awaiting_test":      { "label": "待检查",         "color": "orange", "icon": "🔵" },
+      "test_pending_24h":   { "label": "待检查·超 24h",  "color": "red",    "icon": "🟠" },
+      "awaiting_rx":        { "label": "报告中",         "color": "green",  "icon": "🟢" },
+      "dispensed":          { "label": "已完成",         "color": "green",  "icon": "✅" },
+      "recall_pending":     { "label": "待复诊",         "color": "yellow", "icon": "🟡" },
+      "archived":           { "label": "已归档",         "color": "gray",   "icon": "⚫" }
     }
   },
   "disease_library": [
