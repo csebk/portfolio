@@ -442,6 +442,8 @@
     // 改本组件前必看：PRD V2.0 末尾"📺 demo 演示路径"小节
     const EMREditPage = () => {
       const [symptoms, setSymptoms] = useState(['咳嗽', '咳痰', '发热', '乏力']);
+      // 🆕 V2.0.7 体征（语音识别·只读）默认带几条便于演示
+      const [signs, setSigns] = useState(['呼吸音延长', '肺部湿啰音']);
       const [aiLoading, setAiLoading] = useState(false);
       const [aiResult, setAiResult] = useState(null);
       // 🆕 V2.0.2 状态
@@ -460,6 +462,8 @@
       const [selectedTests, setSelectedTests] = useState(new Set(['血常规', 'CRP']));
       const [customTests, setCustomTests] = useState([]);
       const [showTestModal, setShowTestModal] = useState(false);
+      // 🆕 V2.0.7 开检查单特殊要求备注
+      const [specialNote, setSpecialNote] = useState('');
       const [showRxModal, setShowRxModal] = useState(false);
       const [showFollowupModal, setShowFollowupModal] = useState(false);
       // 🆕 V2.0.3 PRD 追溯气泡
@@ -632,26 +636,14 @@
                   </div>
                 </Card>
 
-                <Card>
-                  <h3 className="font-bold mb-2 text-sm">🩺 症状采集（已选 {symptoms.length}）</h3>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {allSymptoms.slice(0, 16).map(s => (
-                      <button key={s} onClick={() => setSymptoms(symptoms.includes(s) ? symptoms.filter(x => x !== s) : [...symptoms, s])} className={`px-2 py-0.5 rounded-full text-xs ${symptoms.includes(s) ? 'bg-med-blue text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>{s}</button>
-                    ))}
-                  </div>
-                  <h3 className="font-bold mb-1.5 text-sm">👆 体征采集</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {allSigns.slice(0, 10).map(s => (
-                      <button key={s} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 hover:bg-gray-200">{s}</button>
-                    ))}
-                  </div>
-                </Card>
+                {/* 🆕 V2.0.7 改：症状/体征 移右栏 AI 区顶部（只读·语音识别）*/}
+                {/* 原左栏症状/体征块已删除 */}
 
-                {/* 🆕 改 3：诊断疾病字段（接受 AI 自动填 + 手动选）*/}
+                {/* 🆕 改 3：初步诊断（V2.0.7 改名自"诊断疾病"）*/}
                 <Card>
                   <div id="tip-6" className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-sm">🩺 诊断疾病 <span className="text-xs text-gray-500">（{diagnoses.length} 项）</span>
-                      <Tip>为什么采纳后自动填？减少医生重复输入。点 ✕ 可删，可手动加（PRD §6.5）</Tip>
+                    <h3 className="font-bold text-sm">🩺 初步诊断 <span className="text-xs text-gray-500">（{diagnoses.length} 项）</span>
+                      <Tip>为什么采纳后自动填？减少医生重复输入。点 ✕ 可删，可手动加（PRD §3.3 US-MID-004）</Tip>
                     </h3>
                     <button onClick={() => setShowDiseasePicker(true)} className="bg-med-blue text-white rounded-lg px-2.5 py-1 text-xs">+ 添加疾病</button>
                   </div>
@@ -668,37 +660,75 @@
                   )}
                 </Card>
 
-                {/* 🆕 改 3：推荐检查移左栏（处方上方）*/}
+                {/* 🆕 V2.0.7 改：推荐检查 → 移到右栏疑似诊断下方（详见右栏）*/}
+
+                {/* 🆕 V2.0.7 改：📋 既往史卡片（9 类子字段合并）*/}
                 <Card>
-                  <h3 className="font-bold mb-2 text-sm">📋 推荐检查 <span className="text-xs text-gray-500">（已选 {selectedTests.size + customTests.length} 项）</span></h3>
-                  <div className="space-y-1 mb-2">
-                    {recommendedTests.map((t, i) => (
-                      <label key={i} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-gray-50 p-1 rounded">
-                        <input type="checkbox" checked={selectedTests.has(t.name)} onChange={() => { const n = new Set(selectedTests); n.has(t.name) ? n.delete(t.name) : n.add(t.name); setSelectedTests(n); }} className="w-3 h-3" />
-                        <span className="flex-1">{t.name}</span>
-                        <span className={`text-[10px] px-1.5 rounded ${t.urgency === '常规' ? 'bg-med-blue-light text-med-blue' : 'bg-gray-100'}`}>{t.urgency}</span>
-                      </label>
-                    ))}
-                    {/* 🆕 自定义检查项 */}
-                    {customTests.map((ct, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs p-1 bg-status-green/5 border border-status-green/30 rounded">
-                        <span className="flex-1">✏️ {ct}</span>
-                        <span className="text-[10px] px-1.5 rounded bg-status-green/20 text-status-green">自定义</span>
-                        <span className="cursor-pointer text-gray-400 hover:text-status-red" onClick={() => setCustomTests(customTests.filter(x => x !== ct))}>✕</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-sm">📋 既往史（9 类子字段）</h3>
+                    <span className="text-[10px] text-gray-500">自动带入 · 可手动改</span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    {/* 2. 过敏史（标签） */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">🤧 过敏史</div>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="bg-status-red text-white px-2 py-0.5 rounded-full text-[10px]">⚠️ 青霉素</span>
                       </div>
-                    ))}
+                    </div>
+                    {/* 3. 既往疾病史（标签+文本） */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">💊 既往疾病史</div>
+                      <input className="w-full border rounded px-2 py-1 text-[11px]" placeholder="如：高血压 5 年、糖尿病 3 年" defaultValue="高血压 5 年" />
+                    </div>
+                    {/* 4. 手术外伤史 */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">🔪 手术外伤史</div>
+                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：2018 年阑尾炎手术" defaultValue=""></textarea>
+                    </div>
+                    {/* 5. 输血史 */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">🩸 输血史</div>
+                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：2015 年产后输血 400ml" defaultValue=""></textarea>
+                    </div>
+                    {/* 6. 传染病史（标签） */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">🦠 传染病史</div>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[10px] text-gray-400">无</span>
+                      </div>
+                    </div>
+                    {/* 7. 预防接种史 */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">💉 预防接种史</div>
+                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：乙肝疫苗三针完成" defaultValue="乙肝疫苗三针完成"></textarea>
+                    </div>
+                    {/* 8. 个人史·烟酒（标签） */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">🚬 个人史·烟酒</div>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[10px] text-gray-700">不吸烟</span>
+                        <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[10px] text-gray-700">偶尔饮酒</span>
+                      </div>
+                    </div>
+                    {/* 8b. 个人史·职业暴露（标签） */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">🛡️ 个人史·职业暴露</div>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="bg-med-blue-light text-med-blue px-2 py-0.5 rounded-full text-[10px]">无特殊</span>
+                      </div>
+                    </div>
+                    {/* 9. 婚育史 */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">👨‍👩‍👧 婚育史</div>
+                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：已婚，育 1 子 1 女" defaultValue="已婚，育 1 子 1 女"></textarea>
+                    </div>
+                    {/* 10. 家族史 */}
+                    <div>
+                      <div className="font-medium text-gray-700 mb-0.5">👪 家族史</div>
+                      <textarea className="w-full border rounded px-2 py-1 text-[11px]" rows="1" placeholder="如：父亲高血压、母亲糖尿病" defaultValue="父亲高血压"></textarea>
+                    </div>
                   </div>
-                  {/* 🆕 自定义输入框 */}
-                  <div id="tip-7" className="flex gap-1 mb-2 items-center">
-                    <input value={customTestInput} onChange={e => setCustomTestInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCustomTest()} placeholder="自定义检查项（如心肌酶谱）..." className="flex-1 border rounded px-2 py-1 text-xs" />
-                    <button onClick={addCustomTest} className="bg-status-green text-white rounded px-2 py-1 text-xs">+ 添加</button>
-                    <Tip>为什么支持自定义？基层医生会加"心肌酶谱"等医院特有项目，AI 未必覆盖（PRD §4.5 D11）</Tip>
-                  </div>
-                  {/* 📋 PRD §4.5 规则 [检查号源释放/可自定义] - US-MID-005 */}
-                  <span id="tip-8" className="inline-flex items-center gap-1 w-full">
-                    <button onClick={() => setShowTestModal(true)} className="flex-1 bg-med-blue text-white rounded-lg py-1.5 text-xs font-medium">🩺 开检查单（{selectedTests.size + customTests.length} 项）· 诊中分流</button>
-                    <Tip>为什么号源释放不是锁号？基层号源紧张，锁号被直接放弃，诊中分流失去意义（PRD §4.5 D7）</Tip>
-                  </span>
                 </Card>
 
                 {/* 处方与医嘱 - 📋 PRD §7.5 规则 [过敏冲突实时警告] - US-MID-008 */}
@@ -739,8 +769,31 @@
                 </div>
               </div>
 
-              {/* 右 5/12：AI 诊断（精简：删"治疗方案"卡片）*/}
+              {/* 右 5/12：AI 诊断（V2.0.7 增：症状/体征·AI 处置建议汇总）*/}
               <div className="col-span-5 space-y-3">
+                {/* 🆕 V2.0.7 改：症状（语音识别·只读）移到 AI 区顶部上半部分 */}
+                <div className="bg-ai-purple/5 border border-ai-purple/30 rounded-lg p-2.5">
+                  <div className="text-xs font-bold text-ai-purple mb-1.5 flex items-center gap-1">🎙️ 症状（语音识别·只读）</div>
+                  {symptoms.length === 0 ? (
+                    <div className="text-[10px] text-gray-500 text-center py-1">⏳ 等待录音转写...</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {symptoms.map((s, i) => <span key={i} className="bg-ai-purple text-white px-2 py-0.5 rounded-full text-[10px]">{s}</span>)}
+                    </div>
+                  )}
+                </div>
+                {/* 🆕 V2.0.7 改：体征（语音识别·只读）*/}
+                <div className="bg-ai-purple/5 border border-ai-purple/30 rounded-lg p-2.5">
+                  <div className="text-xs font-bold text-ai-purple mb-1.5 flex items-center gap-1">🩺 体征（语音识别·只读）</div>
+                  {signs.length === 0 ? (
+                    <div className="text-[10px] text-gray-500 text-center py-1">⏳ 等待录音转写...</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {signs.map((s, i) => <span key={i} className="bg-ai-purple text-white px-2 py-0.5 rounded-full text-[10px]">{s}</span>)}
+                    </div>
+                  )}
+                </div>
+
                 {/* 🆕 审 2：AI 触发按钮移到卡片顶部 - 📋 PRD §6.5 规则 [手动触发 AI] - US-MID-003 */}
                 <div id="tip-4" className="flex items-center justify-between">
                   <h3 className="font-bold text-sm flex items-center gap-1"><span className="text-ai-purple">🤖</span> AI 辅助诊断
@@ -788,6 +841,53 @@
                       </div>
                     </div>
                   )}
+                </Card>
+
+                {/* 🆕 V2.0.7 改：📋 推荐检查（疑似诊断下方·左字段+右采纳后出现+可自加）*/}
+                <Card>
+                  <h3 className="font-bold mb-2 text-sm">📋 推荐检查 <span className="text-xs text-gray-500">（已选 {selectedTests.size + customTests.length} 项）</span></h3>
+                  <div className="space-y-1 mb-2">
+                    {recommendedTests.map((t, i) => (
+                      <label key={i} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-gray-50 p-1 rounded">
+                        <input type="checkbox" checked={selectedTests.has(t.name)} onChange={() => { const n = new Set(selectedTests); n.has(t.name) ? n.delete(t.name) : n.add(t.name); setSelectedTests(n); }} className="w-3 h-3" />
+                        <span className="flex-1">{t.name}</span>
+                        <span className={`text-[10px] px-1.5 rounded ${t.urgency === '常规' ? 'bg-med-blue-light text-med-blue' : 'bg-gray-100'}`}>{t.urgency}</span>
+                      </label>
+                    ))}
+                    {customTests.map((ct, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs p-1 bg-status-green/5 border border-status-green/30 rounded">
+                        <span className="flex-1">✏️ {ct}</span>
+                        <span className="text-[10px] px-1.5 rounded bg-status-green/20 text-status-green">自定义</span>
+                        <span className="cursor-pointer text-gray-400 hover:text-status-red" onClick={() => setCustomTests(customTests.filter(x => x !== ct))}>✕</span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* 🆕 自定义输入框 */}
+                  <div id="tip-7" className="flex gap-1 mb-2 items-center">
+                    <input value={customTestInput} onChange={e => setCustomTestInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCustomTest()} placeholder="自定义检查项（如心肌酶谱）..." className="flex-1 border rounded px-2 py-1 text-xs" />
+                    <button onClick={addCustomTest} className="bg-status-green text-white rounded px-2 py-1 text-xs">+ 添加</button>
+                    <Tip>为什么支持自定义？基层医生会加"心肌酶谱"等医院特有项目，AI 未必覆盖（PRD §3.3 D11）</Tip>
+                  </div>
+                  {/* 📋 PRD §3.3 规则 [检查号源释放/可自定义] - US-MID-005 */}
+                  <span id="tip-8" className="inline-flex items-center gap-1 w-full">
+                    <button onClick={() => setShowTestModal(true)} className="flex-1 bg-med-blue text-white rounded-lg py-1.5 text-xs font-medium">🩺 开检查单（{selectedTests.size + customTests.length} 项）· 诊中分流</button>
+                    <Tip>为什么号源释放不是锁号？基层号源紧张，锁号被直接放弃，诊中分流失去意义（PRD §3.3 D7）</Tip>
+                  </span>
+                </Card>
+
+                {/* 🆕 V2.0.7 改：💡 AI 处置建议汇总 移到右栏 AI 区最后 */}
+                <Card>
+                  <h3 className="font-bold mb-2 text-sm">💡 AI 处置建议汇总</h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2 bg-med-blue-light border border-med-blue/30 rounded">
+                      <div className="font-medium text-med-blue mb-0.5">推荐药物</div>
+                      <div>阿莫西林 500mg TID × 7 天 → <span className="text-status-red">⚠️ 过敏 → 改头孢克肟</span></div>
+                    </div>
+                    <div className="p-2 bg-status-green/5 border border-status-green/30 rounded">
+                      <div className="font-medium text-status-green mb-0.5">非药物医嘱</div>
+                      <div className="text-gray-700">• 多饮水，保持空气湿润  • 避免烟雾粉尘  • 注意休息  • 症状加重立即复诊</div>
+                    </div>
+                  </div>
                 </Card>
               </div>
             </div>
@@ -838,10 +938,20 @@
                   {[...selectedTests].map((t, i) => <li key={i}>• {t}</li>)}
                   {customTests.map((t, i) => <li key={'c'+i}>• ✏️ {t} <span className="text-xs text-status-green">（自定义）</span></li>)}
                 </ul>
+                {/* 🆕 V2.0.7 改：特殊要求备注（模板 + 自由文本）*/}
+                <div className="mb-3">
+                  <div className="text-sm font-medium mb-1.5">📝 特殊要求备注</div>
+                  <div className="flex flex-wrap gap-1 mb-1.5">
+                    {['🚨 急诊优先（30 分钟内出结果）', '🍽️ 需空腹（禁食 8 小时）', '👨‍👩‍👧 需要家属陪同', '🧂 含碘造影剂', '🩸 抽血检查', '🛏️ 卧床检查'].map(t => (
+                      <button key={t} onClick={() => setSpecialNote(t)} className={`text-[10px] px-2 py-0.5 rounded-full border ${specialNote === t ? 'bg-ai-purple text-white border-ai-purple' : 'bg-white text-gray-700 border-gray-300 hover:border-ai-purple'}`}>{t}</button>
+                    ))}
+                  </div>
+                  <textarea value={specialNote} onChange={e => setSpecialNote(e.target.value)} className="w-full border rounded-lg px-2 py-1.5 text-xs" rows="2" placeholder="或自由填写其他要求（如：优先做此检查，避开午休时间）..." />
+                </div>
                 <div className="text-xs text-ai-purple bg-ai-purple-light border border-ai-purple/20 rounded p-2 mb-3">💡 诊中分流：检查单开出后释放号源，结果自动回传工作台。</div>
                 <div className="flex gap-2 justify-end">
                   <Button color="white" onClick={() => setShowTestModal(false)}>取消</Button>
-                  <Button onClick={() => { setShowTestModal(false); alert('✅ 检查单已开出！号源已释放。'); }}>确认开出</Button>
+                  <Button onClick={() => { setShowTestModal(false); alert('✅ 检查单已开出！号源已释放。\n备注：' + (specialNote || '无')); }}>确认开出</Button>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 {
-  "version": "V2.0.6",
+  "version": "V2.0.7",
   "description": "AI 辅助问诊 demo · 双向追溯数据源（JSON ↔ PRD md 唯一真相）",
   "last_updated": "2026-08-27",
   "rules": [
@@ -89,5 +89,33 @@
     { "cat": "其他", "name": "流行性感冒" },
     { "cat": "其他", "name": "尿路感染" },
     { "cat": "其他", "name": "急性扁桃体炎" }
+  ],
+  "history_8": {
+    "past_diseases":    { "label": "既往疾病史",   "type": "tags+text",   "auto_from": "档案库", "placeholder": "如：高血压 5 年、糖尿病 3 年" },
+    "surgery_trauma":   { "label": "手术外伤史",   "type": "textarea",   "auto_from": "档案库", "placeholder": "如：2018 年阑尾炎手术、2020 年右臂骨折" },
+    "transfusion":      { "label": "输血史",       "type": "textarea",   "auto_from": "档案库", "placeholder": "如：2015 年产后输血 400ml" },
+    "infectious":       { "label": "传染病史",     "type": "tags",        "auto_from": "档案库", "placeholder": "如：乙肝、结核", "options": ["乙肝", "丙肝", "结核", "梅毒", "HIV", "其他"] },
+    "vaccination":      { "label": "预防接种史",   "type": "textarea",   "auto_from": "档案库", "placeholder": "如：乙肝疫苗三针完成、新冠疫苗 2 针" },
+    "personal_smoking": { "label": "个人史·烟酒", "type": "tags",        "auto_from": "档案库", "placeholder": "烟酒史", "options": ["不吸烟", "吸烟 10 年", "已戒烟 5 年", "不饮酒", "偶尔饮酒", "长期饮酒"] },
+    "personal_occupation": { "label": "个人史·职业暴露", "type": "tags", "auto_from": "档案库", "placeholder": "职业暴露", "options": ["无特殊", "粉尘", "化学", "放射", "噪音", "其他"] },
+    "marriage_repro":   { "label": "婚育史",       "type": "textarea",   "auto_from": "档案库", "placeholder": "如：已婚，育 1 子 1 女" },
+    "family":           { "label": "家族史",       "type": "textarea",   "auto_from": "档案库", "placeholder": "如：父亲高血压、母亲糖尿病" }
+  },
+  "symptoms_template": [
+    "咳嗽", "咳痰", "发热", "乏力", "胸闷", "气短", "头痛", "咽痛",
+    "鼻塞", "流涕", "腹痛", "腹泻", "恶心", "呕吐", "心悸", "盗汗"
+  ],
+  "signs_template": [
+    "呼吸音延长", "肺部湿啰音", "肺部干啰音", "胸廓饱满", "咽部充血",
+    "扁桃体肿大", "腹部压痛", "肠鸣音亢进", "心律不齐", "皮肤黄染",
+    "下肢水肿", "皮疹"
+  ],
+  "test_special_note_templates": [
+    "🚨 急诊优先（30 分钟内出结果）",
+    "🍽️ 需空腹（禁食 8 小时）",
+    "👨‍👩‍👧 需要家属陪同",
+    "🧂 含碘造影剂（禁用于甲亢/过敏）",
+    "🩸 抽血检查（带试管条码）",
+    "🛏️ 卧床检查（不能下床）"
   ]
 }
