@@ -890,22 +890,21 @@
                           {chiefComplaintDraft && !chiefAccepted && (
                             <button
                               onClick={() => {
-                                // 🆕 V2.3.0 改 D：AI 语义合并（伪 AI 合并规则）+ 保留草稿
-                                const ta = document.querySelector('textarea[data-field="chief_complaint"]');
-                                if (ta) {
-                                  const oldVal = ta.value;
-                                  // AI 合并 = 原值 + "；" + AI 补充：" + 草稿
-                                  const merged = oldVal ? oldVal + '；AI 补充：' + chiefComplaintDraft : chiefComplaintDraft;
-                                  ta.value = merged;
-                                  const ev = new Event('input', { bubbles: true });
-                                  ta.dispatchEvent(ev);
-                                  // 🆕 V2.7.0 改 1A：滚动到左栏 + 1.5s 紫色高亮（让医生看到自动填入）
-                                  ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                  ta.classList.add('pulse-highlight');
-                                  setTimeout(() => ta.classList.remove('pulse-highlight'), 1600);
-                                }
-                                // 接受标记 = true（草稿保留，加 ✅）
+                                // 🆕 V2.7.0 改 1A+ 修 bug：改 React state 而非 DOM（之前 ta.value=merged 被 React 受控覆盖）
+                                setChiefComplaint(prev => {
+                                  const oldVal = prev || '';
+                                  return oldVal ? oldVal + '；AI 补充：' + chiefComplaintDraft : chiefComplaintDraft;
+                                });
                                 setChiefAccepted(true);
+                                // 🆕 V2.7.0 改 1A：滚动到左栏 + 1.5s 紫色高亮
+                                setTimeout(() => {
+                                  const ta = document.querySelector('textarea[data-field="chief_complaint"]');
+                                  if (ta) {
+                                    ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    ta.classList.add('pulse-highlight');
+                                    setTimeout(() => ta.classList.remove('pulse-highlight'), 1600);
+                                  }
+                                }, 50);
                               }}
                               className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
                               title="AI 语义合并到左栏主诉（不清空）+ 自动滚动+高亮"
@@ -922,19 +921,21 @@
                           {presentIllnessDraft && !piAccepted && (
                             <button
                               onClick={() => {
-                                const ta = document.querySelector('textarea[data-field="present_illness"]');
-                                if (ta) {
-                                  const oldVal = ta.value;
-                                  const merged = oldVal ? oldVal + '；AI 补充：' + presentIllnessDraft : presentIllnessDraft;
-                                  ta.value = merged;
-                                  const ev = new Event('input', { bubbles: true });
-                                  ta.dispatchEvent(ev);
-                                  // 🆕 V2.7.0 改 1A：滚动到左栏 + 1.5s 紫色高亮
-                                  ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                  ta.classList.add('pulse-highlight');
-                                  setTimeout(() => ta.classList.remove('pulse-highlight'), 1600);
-                                }
+                                // 🆕 V2.7.0 修 bug：改 React state 而非 DOM（之前 ta.value=merged 被 React 受控覆盖）
+                                setPresentIllness(prev => {
+                                  const oldVal = prev || '';
+                                  return oldVal ? oldVal + '；AI 补充：' + presentIllnessDraft : presentIllnessDraft;
+                                });
                                 setPiAccepted(true);
+                                // 🆕 V2.7.0 改 1A：滚动到左栏 + 1.5s 紫色高亮
+                                setTimeout(() => {
+                                  const ta = document.querySelector('textarea[data-field="present_illness"]');
+                                  if (ta) {
+                                    ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    ta.classList.add('pulse-highlight');
+                                    setTimeout(() => ta.classList.remove('pulse-highlight'), 1600);
+                                  }
+                                }, 50);
                               }}
                               className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
                               title="AI 语义合并到左栏现病史（不清空）+ 自动滚动+高亮"
