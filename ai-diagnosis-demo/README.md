@@ -242,6 +242,6 @@ demo/
 
 ---
 
-*最后更新：2026-08-28 V2.5.0*
+*最后更新：2026-08-28 V2.6.0*
 *作者：仲超*
 *配套：需求分析 V2.0 / PRD V2.0（V2.0.7 §3.3 病历字段补全 18 项 + V2.0.5 第二阶段 + V2.0.6 双向追溯 + 末尾"📺 demo 演示路径"）/ index.html（V2.0.7）/ `demo/js/prd_data.json`（4 类·V2.0.7 新增 history_8+symptoms+signs+test_notes）/ `sync_prd.js`*
