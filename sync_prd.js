@@ -6,7 +6,8 @@
  *   node sync_prd.js check    # 检查 JSON 与 MD 表格是否一致（CI 友好）
  *   node sync_prd.js json2md  # 从 JSON 同步到 MD（修改 MD 表格部分）
  *   node sync_prd.js md2json  # 从 MD 同步到 JSON（修改 JSON 数据部分）
- *   node sync_prd.js status   # 显示当前 JSON 版本 + 规则数 + 状态数 + 疾病数
+ *   node sync_prd.js demo-default # 从 demo 抽 5 患者 + 5 随访 + 9 类既往史到 JSON
+ *   node sync_prd.js rules-by-page # 从 PRD §X.7 6 字段汇总抽取按页分组的详细规则
  *
  * 双向追溯原则：
  *   - JSON 是 single source of truth
@@ -227,15 +228,96 @@ function demoDefault() {
   console.log(`\n✅ demo_default 完成: patients=${patients.length}, followups=${followups.length}, history=${Object.keys(historyDefaults).length}`);
 }
 
-// CLI
+// ========== 🆕 V2.5.0 rules-by-page：解析 PRD §X.7 6 字段汇总表格，按页分组 ==========
+function rulesByPage() {
+  const md = loadMD();
+  const json = loadJSON();
+
+  // 页面映射：模块 §X → 页面 key
+  const PAGE_MAP = {
+    '1': 'P-2',   // §1 预诊
+    '2': 'P0',    // §2 档案
+    '3': 'P1',    // §3 录音
+    '4': 'P3',    // §4 分流
+    '5': 'P3',    // §5 检查
+    '6': 'P3',    // §6 AI 诊断
+    '7': 'P3',    // §7 病历
+    '8': 'P4',    // §8 处方
+    '9': 'P5',    // §9 随访
+    '10': 'P5',   // §10 AI 风险
+    '11': 'P5',   // §11 多租户
+    '12': 'P0.5', // §12 危急值
+  };
+
+  // 字段映射：模块 §X → 默认 field 名
+  const FIELD_MAP = {
+    '1': 'pre_diagnosis_start',
+    '2': 'register',
+    '3': 'recording',
+    '4': 'triage',
+    '5': 'test_ordered',
+    '6': 'ai_trigger',
+    '7': 'chief_complaint',
+    '8': 'prescription',
+    '9': 'followup_config',
+    '10': 'ai_risk',
+    '11': 'tenant',
+    '12': 'critical_value',
+  };
+
+  const rulesByPage = { _comment: '按页面分组的详细规则集（V2.5.0 改造：从 PRD §X.7 6 字段汇总抽取）' };
+
+  // 解析 §X.7 6 字段汇总表格
+  // 匹配模式：#### X.7 🆕 V2.0 补全：6 字段汇总... + 后续 6 行表格
+  const moduleRegex = /####\s+(\d+)\.7\s+🆕\s+V2\.0\s+补全：6\s+字段汇总[\s\S]*?(?=\n####|\n##|$)/g;
+  let match;
+  while ((match = moduleRegex.exec(md)) !== null) {
+    const moduleNum = match[1];
+    const page = PAGE_MAP[moduleNum];
+    const field = FIELD_MAP[moduleNum];
+    if (!page || !field) continue;
+
+    const block = match[0];
+    if (!rulesByPage[page]) rulesByPage[page] = [];
+
+    // 抽取 6 字段表格行（| **触发条件** | ... |）
+    const fieldNames = ['触发条件', '结束条件', '状态变化', '权限范围', '异常处理', '验收标准'];
+    fieldNames.forEach((fn, i) => {
+      const rowRegex = new RegExp(`\\*\\*${fn}\\*\\*\\s*\\|\\s*([^\\n|]+(?:\\|[^\\n]+)?)`);
+      const rowMatch = block.match(rowRegex);
+      const detail = rowMatch ? rowMatch[1].trim().replace(/\s*\|\s*$/, '') : '';
+      if (detail) {
+        rulesByPage[page].push({
+          id: `${page}-${moduleNum}-${fn.replace('条件', '').replace('变化', '-state').replace('权限', '-perm').replace('异常', '-exc').replace('验收', '-ac')}`,
+          field: field,
+          rule: fn,
+          detail: detail
+        });
+      }
+    });
+  }
+
+  const total = Object.entries(rulesByPage).filter(([k]) => k !== '_comment').reduce((s, [_, v]) => s + v.length, 0);
+  json.rules_by_page = rulesByPage;
+  json.version = 'V2.5.0';
+  json.last_updated = new Date().toISOString().slice(0, 10);
+  saveJSON(json);
+  console.log(`\n✅ rules-by-page 完成: ${total} 条规则 / ${Object.keys(rulesByPage).length - 1} 页面`);
+  for (const [k, v] of Object.entries(rulesByPage)) {
+    if (k !== '_comment') console.log(`   ${k}: ${v.length} 条`);
+  }
+}
+
+
 const cmd = process.argv[2] || 'status';
 switch (cmd) {
   case 'status':       status(); break;
   case 'json2md':      json2md(); break;
   case 'check':        check(); break;
   case 'demo-default': demoDefault(); break;
+  case 'rules-by-page': rulesByPage(); break;
   default:
     console.error('Unknown command:', cmd);
-    console.error('Usage: node sync_prd.js [status|json2md|check|demo-default]');
+    console.error('Usage: node sync_prd.js [status|json2md|check|demo-default|rules-by-page]');
     process.exit(1);
 }

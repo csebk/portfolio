@@ -1,7 +1,382 @@
 {
-  "version": "V2.4.0",
+  "version": "V2.5.0",
   "description": "AI 辅助问诊 demo · 双向追溯数据源（JSON ↔ PRD md 唯一真相）",
-  "last_updated": "2026-08-27",
+  "last_updated": "2026-08-28",
+  "rules_by_page": {
+    "_comment": "按页面分组的详细规则集（V2.5.0 改造：从 PRD §X.7 6 字段汇总抽取）",
+    "P-2": [
+      {
+        "id": "P-2-1-触发",
+        "field": "pre_diagnosis_start",
+        "rule": "触发条件",
+        "detail": "患者 App/一体机打开 → 输症状 → 点\"开始预诊\""
+      },
+      {
+        "id": "P-2-1-结束",
+        "field": "pre_diagnosis_start",
+        "rule": "结束条件",
+        "detail": "返回科室建议（普通/急症/危症）"
+      },
+      {
+        "id": "P-2-1-状态-state",
+        "field": "pre_diagnosis_start",
+        "rule": "状态变化",
+        "detail": "`首页 → 输症状中(轮数+1) → 追问中 → 加载结果 → 科室建议 → 退出`"
+      },
+      {
+        "id": "P-2-1--perm范围",
+        "field": "pre_diagnosis_start",
+        "rule": "权限范围",
+        "detail": "患者（仅自己）/超管（看全平台数据）"
+      },
+      {
+        "id": "P-2-1--exc处理",
+        "field": "pre_diagnosis_start",
+        "rule": "异常处理",
+        "detail": "4 异常（宕机/超时/无法识别/取消）见 §1.6"
+      },
+      {
+        "id": "P-2-1--ac标准",
+        "field": "pre_diagnosis_start",
+        "rule": "验收标准",
+        "detail": "AC7（§14.2）：患者 App 输症状 → 返回科室建议（不开方）"
+      }
+    ],
+    "P1": [
+      {
+        "id": "P1-3-触发",
+        "field": "recording",
+        "rule": "触发条件",
+        "detail": "医生在 P3 接诊中点\"开始录音\"按钮"
+      },
+      {
+        "id": "P1-3-结束",
+        "field": "recording",
+        "rule": "结束条件",
+        "detail": "医生点\"结束录音\"或 30 分钟超时自动停"
+      },
+      {
+        "id": "P1-3-状态-state",
+        "field": "recording",
+        "rule": "状态变化",
+        "detail": "`idle → recording(蓝灯) → transcribing(动画) → filled(文字入主诉/现病史)`"
+      },
+      {
+        "id": "P1-3--perm范围",
+        "field": "recording",
+        "rule": "权限范围",
+        "detail": "医生本人（本会话）"
+      },
+      {
+        "id": "P1-3--exc处理",
+        "field": "recording",
+        "rule": "异常处理",
+        "detail": "4 异常（麦克风权限/超时/网络断/转写失败）见 §3.6"
+      },
+      {
+        "id": "P1-3--ac标准",
+        "field": "recording",
+        "rule": "验收标准",
+        "detail": "AC9（§14.2）：医生点\"开始录音\" → 1 秒后转写文字填入主诉"
+      }
+    ],
+    "P3": [
+      {
+        "id": "P3-4-触发",
+        "field": "triage",
+        "rule": "触发条件",
+        "detail": "医生在 P3 接诊中点\"📋 开检查单\""
+      },
+      {
+        "id": "P3-4-结束",
+        "field": "triage",
+        "rule": "结束条件",
+        "detail": "检查单已发到检查科 + 当前号源释放"
+      },
+      {
+        "id": "P3-4-状态-state",
+        "field": "triage",
+        "rule": "状态变化",
+        "detail": "`idle → 开单弹窗 → 选检查项+备注 → 提交 → 释放号源 → 推送检查科`"
+      },
+      {
+        "id": "P3-4--perm范围",
+        "field": "triage",
+        "rule": "权限范围",
+        "detail": "医生本人（开单）/ 院长（配置项）"
+      },
+      {
+        "id": "P3-4--exc处理",
+        "field": "triage",
+        "rule": "异常处理",
+        "detail": "5 异常（号源不足/检查科离线/24h 超时/患者拒做/换医生）见 §13.7"
+      },
+      {
+        "id": "P3-4--ac标准",
+        "field": "triage",
+        "rule": "验收标准",
+        "detail": "AC10（§14.2）：医生点\"开检查单\" → 释放当前号源+检查单推送检查科"
+      },
+      {
+        "id": "P3-5-触发",
+        "field": "test_ordered",
+        "rule": "触发条件",
+        "detail": "检查科上传结果（HL7 消息）→ 系统接收"
+      },
+      {
+        "id": "P3-5-结束",
+        "field": "test_ordered",
+        "rule": "结束条件",
+        "detail": "医生工作台红点+ AI 二次解读报告呈现"
+      },
+      {
+        "id": "P3-5-状态-state",
+        "field": "test_ordered",
+        "rule": "状态变化",
+        "detail": "`检查中 → 结果已上传 → AI 解读中 → 待医生采纳 → 已采纳（写入病历）`"
+      },
+      {
+        "id": "P3-5--perm范围",
+        "field": "test_ordered",
+        "rule": "权限范围",
+        "detail": "开单医生 / 接管医生 / 院长（看）"
+      },
+      {
+        "id": "P3-5--exc处理",
+        "field": "test_ordered",
+        "rule": "异常处理",
+        "detail": "3 异常（HL7 失败/AI 解读超时/数据冲突）见 §5.6"
+      },
+      {
+        "id": "P3-5--ac标准",
+        "field": "test_ordered",
+        "rule": "验收标准",
+        "detail": "AC11（§14.2）：检查完成 → 医生工作台红点+AI 二次解读+5 分钟内"
+      },
+      {
+        "id": "P3-6-触发",
+        "field": "ai_trigger",
+        "rule": "触发条件",
+        "detail": "医生在 P3 录完主诉/现病史后点\"🤖 触发 AI 诊断\""
+      },
+      {
+        "id": "P3-6-结束",
+        "field": "ai_trigger",
+        "rule": "结束条件",
+        "detail": "AI Top 3 诊断 + 依据呈现 + 医生采纳/忽略"
+      },
+      {
+        "id": "P3-6-状态-state",
+        "field": "ai_trigger",
+        "rule": "状态变化",
+        "detail": "`idle → loading(动画) → result(Top 3 + 依据) → 医生采纳 → 自动填入诊断字段`"
+      },
+      {
+        "id": "P3-6--perm范围",
+        "field": "ai_trigger",
+        "rule": "权限范围",
+        "detail": "医生本人"
+      },
+      {
+        "id": "P3-6--exc处理",
+        "field": "ai_trigger",
+        "rule": "异常处理",
+        "detail": "3 异常（模型宕机/超时/低置信度）见 §6.6"
+      },
+      {
+        "id": "P3-6--ac标准",
+        "field": "ai_trigger",
+        "rule": "验收标准",
+        "detail": "AC1（§14.1）：医生采集症状→AI 返回 3 诊断→医生采纳→病历正确写入"
+      }
+    ],
+    "P4": [
+      {
+        "id": "P4-8-触发",
+        "field": "prescription",
+        "rule": "触发条件",
+        "detail": "医生在 P3 接诊中点\"💊 开方\" 弹窗"
+      },
+      {
+        "id": "P4-8-结束",
+        "field": "prescription",
+        "rule": "结束条件",
+        "detail": "处方已签名 + 保存 + 推送药房/打印"
+      },
+      {
+        "id": "P4-8-状态-state",
+        "field": "prescription",
+        "rule": "状态变化",
+        "detail": "`开方弹窗 → 选药(扫码/拼音) → 校验 → 签名 → 保存 → 推送`"
+      },
+      {
+        "id": "P4-8--perm范围",
+        "field": "prescription",
+        "rule": "权限范围",
+        "detail": "医生（开方）/ 院长（配置规则）/ 超管（看）"
+      },
+      {
+        "id": "P4-8--exc处理",
+        "field": "prescription",
+        "rule": "异常处理",
+        "detail": "4 异常（过敏冲突/配伍禁忌/麻精药品/库存）见 §8.6"
+      },
+      {
+        "id": "P4-8--ac标准",
+        "field": "prescription",
+        "rule": "验收标准",
+        "detail": "AC4（§14.1）：\"青霉素过敏\"+AI 推荐阿莫西林→红色警告，强制拦截"
+      }
+    ],
+    "P5": [
+      {
+        "id": "P5-9-触发",
+        "field": "followup_config",
+        "rule": "触发条件",
+        "detail": "医生提交处方后弹窗 → 医生点\"配随访任务\""
+      },
+      {
+        "id": "P5-9-结束",
+        "field": "followup_config",
+        "rule": "结束条件",
+        "detail": "5 任务配完 + 医生确认 + 患者收到首条推送"
+      },
+      {
+        "id": "P5-9-状态-state",
+        "field": "followup_config",
+        "rule": "状态变化",
+        "detail": "`弹窗 → 5 任务配置（AI 推荐+医生改）→ 确认 → 推送 → 监测中 → 结束归档`"
+      },
+      {
+        "id": "P5-9--perm范围",
+        "field": "followup_config",
+        "rule": "权限范围",
+        "detail": "医生（配任务）/ 护士（辅助随访）/ 患者（接收）"
+      },
+      {
+        "id": "P5-9--exc处理",
+        "field": "followup_config",
+        "rule": "异常处理",
+        "detail": "4 异常（AI 宕机/未响应/拒接/急危重症）见 §9.6"
+      },
+      {
+        "id": "P5-9--ac标准",
+        "field": "followup_config",
+        "rule": "验收标准",
+        "detail": "AB4（§14.4）：复诊率 +20%；AB5（§14.4）：患者响应率 ≥ 70%"
+      },
+      {
+        "id": "P5-10-触发",
+        "field": "ai_risk",
+        "rule": "触发条件",
+        "detail": "患者数据（症状/体征/检验/行为）进入系统"
+      },
+      {
+        "id": "P5-10-结束",
+        "field": "ai_risk",
+        "rule": "结束条件",
+        "detail": "风险标记 + 医生处理（确认/忽略/转诊）"
+      },
+      {
+        "id": "P5-10-状态-state",
+        "field": "ai_risk",
+        "rule": "状态变化",
+        "detail": "`监测中 → 触发风险 → 升级医生 → 医生处理 → 关闭/转诊`"
+      },
+      {
+        "id": "P5-10--perm范围",
+        "field": "ai_risk",
+        "rule": "权限范围",
+        "detail": "医生（处理）/ 院长（配置阈值）/ 超管（看全平台）"
+      },
+      {
+        "id": "P5-10--exc处理",
+        "field": "ai_risk",
+        "rule": "异常处理",
+        "detail": "3 异常（误报/漏报/阈值设错）见 §10.6"
+      },
+      {
+        "id": "P5-10--ac标准",
+        "field": "ai_risk",
+        "rule": "验收标准",
+        "detail": "AB1（§14.4）：AI 诊断采纳率 ≥ 60%；误诊率 < 8%"
+      },
+      {
+        "id": "P5-11-触发",
+        "field": "tenant",
+        "rule": "触发条件",
+        "detail": "任何查询/写入（系统强制 tenant_id）"
+      },
+      {
+        "id": "P5-11-结束",
+        "field": "tenant",
+        "rule": "结束条件",
+        "detail": "操作完成（数据按租户隔离 + 审计留痕）"
+      },
+      {
+        "id": "P5-11-状态-state",
+        "field": "tenant",
+        "rule": "状态变化",
+        "detail": "`请求 → 鉴权(角色+租户) → 操作 → 审计日志 → 完成`"
+      },
+      {
+        "id": "P5-11--perm范围",
+        "field": "tenant",
+        "rule": "权限范围",
+        "detail": "4 角色：超管（全平台）/ 院长（本院）/ 医生/护士（本职）"
+      },
+      {
+        "id": "P5-11--exc处理",
+        "field": "tenant",
+        "rule": "异常处理",
+        "detail": "4 异常（跨租户/AI 配额/账号异常/备份失败）见 §11.6"
+      },
+      {
+        "id": "P5-11--ac标准",
+        "field": "tenant",
+        "rule": "验收标准",
+        "detail": "AC6（§14.1）：诊所 A 数据绝不进诊所 B；AS1-4（§14.6）：数据加密+越权 0+审计 100%"
+      }
+    ],
+    "P0.5": [
+      {
+        "id": "P0.5-12-触发",
+        "field": "critical_value",
+        "rule": "触发条件",
+        "detail": "AI/系统检出危急值（如血糖 >13.9、血钾 >6.5）"
+      },
+      {
+        "id": "P0.5-12-结束",
+        "field": "critical_value",
+        "rule": "结束条件",
+        "detail": "医生已读 + 处理方案已提交"
+      },
+      {
+        "id": "P0.5-12-状态-state",
+        "field": "critical_value",
+        "rule": "状态变化",
+        "detail": "`detected → 4 通道强推中 → 30min 内已读 / 升级科室主任 / 再 30min 升级院长 → 已处理`"
+      },
+      {
+        "id": "P0.5-12--perm范围",
+        "field": "critical_value",
+        "rule": "权限范围",
+        "detail": "医生 / 主任 / 院长（按升级链路）"
+      },
+      {
+        "id": "P0.5-12--exc处理",
+        "field": "critical_value",
+        "rule": "异常处理",
+        "detail": "4 异常（通道失败/医生未读/60min 升级/误判）见 §12.6"
+      },
+      {
+        "id": "P0.5-12--ac标准",
+        "field": "critical_value",
+        "rule": "验收标准",
+        "detail": "AC12-15（§14.3）：4 通道强推+30min 已读+3 级升级+100% 审计"
+      }
+    ]
+  },
   "rules": [
     {
       "module": "P3 接诊中",
@@ -226,12 +601,36 @@
       "icon": "✕"
     },
     "_🆕 V2.3.0 补全 6 个 code（demo fallback 对齐）": {
-      "awaiting_test":      { "label": "待检查",         "color": "orange", "icon": "🔵" },
-      "test_pending_24h":   { "label": "待检查·超 24h",  "color": "red",    "icon": "🟠" },
-      "awaiting_rx":        { "label": "报告中",         "color": "green",  "icon": "🟢" },
-      "dispensed":          { "label": "已完成",         "color": "green",  "icon": "✅" },
-      "recall_pending":     { "label": "待复诊",         "color": "yellow", "icon": "🟡" },
-      "archived":           { "label": "已归档",         "color": "gray",   "icon": "⚫" }
+      "awaiting_test": {
+        "label": "待检查",
+        "color": "orange",
+        "icon": "🔵"
+      },
+      "test_pending_24h": {
+        "label": "待检查·超 24h",
+        "color": "red",
+        "icon": "🟠"
+      },
+      "awaiting_rx": {
+        "label": "报告中",
+        "color": "green",
+        "icon": "🟢"
+      },
+      "dispensed": {
+        "label": "已完成",
+        "color": "green",
+        "icon": "✅"
+      },
+      "recall_pending": {
+        "label": "待复诊",
+        "color": "yellow",
+        "icon": "🟡"
+      },
+      "archived": {
+        "label": "已归档",
+        "color": "gray",
+        "icon": "⚫"
+      }
     }
   },
   "disease_library": [

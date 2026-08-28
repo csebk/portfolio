@@ -355,15 +355,41 @@
     ]);
 
     // 🆕 V2.0.4 "为什么这样设计" 悬浮提示组件（开发 hover 看设计意图）
-    // 🆕 V2.2.0 改 2：Tip 组件受左抽屉开关影响（关闭时不显示 PRD 提示）
-    const Tip = ({ children }) => (
-      <span className="relative inline-block ml-1 group align-middle tip-pdr">
-        <span className="inline-block w-4 h-4 bg-ai-purple-light text-ai-purple rounded-full text-[10px] font-bold leading-4 text-center cursor-help border border-ai-purple/40">?</span>
-        <span className="hidden group-hover:block absolute z-50 left-0 top-full mt-1 w-72 bg-white border-2 border-ai-purple/40 rounded-lg shadow-xl p-2.5 text-[11px] text-gray-700 leading-relaxed text-left">
-          💡 {children}
+    // 🆕 V2.5.0 Tip 组件：接受 field+page，按当前字段过滤 rules_by_page 显示详细规则
+    const Tip = ({ children, field, page }) => {
+      const rules = getPrd('rules_by_page', {});
+      const pageRules = rules[page] || rules['P3'] || [];
+      const fieldRules = field ? pageRules.filter(r => r.field === field) : pageRules;
+      return (
+        <span className="relative inline-block ml-1 group align-middle tip-pdr">
+          <span className="inline-block w-4 h-4 bg-ai-purple-light text-ai-purple rounded-full text-[10px] font-bold leading-4 text-center cursor-help border border-ai-purple/40">?</span>
+          <span className="hidden group-hover:block absolute z-50 left-0 top-full mt-1 w-96 bg-white border-2 border-ai-purple/40 rounded-lg shadow-xl p-2.5 text-[11px] text-gray-700 leading-relaxed text-left max-h-96 overflow-y-auto">
+            {/* 1B 全部规则 + 2A 表格 */}
+            <div className="font-bold text-ai-purple mb-1 text-xs">📋 {page || 'P3'} · {field || '本页规则'} ({fieldRules.length} 条)</div>
+            {fieldRules.length > 0 ? (
+              <table className="w-full text-[10px] border-collapse">
+                <thead>
+                  <tr className="bg-ai-purple/10">
+                    <th className="border border-ai-purple/20 px-1.5 py-0.5 text-left w-16">规则</th>
+                    <th className="border border-ai-purple/20 px-1.5 py-0.5 text-left">详情</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fieldRules.map(r => (
+                    <tr key={r.id} className="hover:bg-ai-purple/5">
+                      <td className="border border-ai-purple/10 px-1.5 py-0.5 font-medium text-ai-purple align-top">{r.rule}</td>
+                      <td className="border border-ai-purple/10 px-1.5 py-0.5 text-gray-600">{r.detail}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-gray-500 italic">💡 {children}</div>
+            )}
+          </span>
         </span>
-      </span>
-    );
+      );
+    };
 
     // 🆕 V2.0.5 左抽屉 PRD 规则树（拆法 5 第二阶段：结构化全貌）
     // 🆕 V2.0.9 改读 window.__PRD__.rules（V2.0.6 双向追溯 JSON）
@@ -391,6 +417,7 @@
     ]);
 
     // 🆕 V2.2.0 改 1+2：LeftPanel 接受 App 顶层 open/setOpen + 展开/收起按钮
+    // 🆕 V2.5.0 LeftPanel 改造：按 currentPath 过滤 rules_by_page（3A 当前页全部）
     const LeftPanel = ({ currentPath, open: openProp, setOpen: setOpenProp }) => {
       const [openLocal, setOpenLocal] = useState(true);
       const [expandedModules, setExpandedModules] = useState({ 'P3 接诊中': true, 'P-2 预诊': true, 'P0.5 危急值': true });
@@ -405,6 +432,42 @@
         document.body.classList.toggle('left-panel-closed', !open);
       }, [open]);
 
+      // 🆕 V2.5.0：currentPath → 页面 key 映射
+      const PATH_TO_PAGE = {
+        '#/pre-diagnosis': 'P-2',
+        '#/pre-diagnosis/chat': 'P-2',
+        '#/register': 'P0',
+        '#/dashboard': 'P3',  // 工作台也归 P3
+        '#/emr/new': 'P3',
+        '#/prescription': 'P4',
+        '#/followup': 'P5',
+        '#/followup-config': 'P5',
+        '#/followup/patient/1': 'P5',
+        '#/stats': 'P5',
+        '#/critical/1': 'P0.5',
+      };
+      const currentPage = PATH_TO_PAGE[currentPath] || 'P3';
+      const PAGE_LABELS = {
+        'P-2': '🩺 预诊', 'P0': '📋 挂号', 'P1': '🎙️ 录音',
+        'P3': '🩺 接诊中', 'P4': '💊 处方', 'P5': '📞 随访', 'P0.5': '🚨 危急值'
+      };
+      const FIELD_LABELS = {
+        pre_diagnosis_start: '预诊开始', register: '挂号报到', recording: '录音',
+        triage: '诊中分流', test_ordered: '检查回流', ai_trigger: 'AI 诊断触发',
+        chief_complaint: '主诉/病历', prescription: '开方',
+        followup_config: '随访配置', ai_risk: 'AI 风险', tenant: '多租户',
+        critical_value: '危急值'
+      };
+      // 🆕 V2.5.0：从 rules_by_page 取当前页规则，按 field 分组
+      const rulesByPage = getPrd('rules_by_page', {});
+      const pageRules = rulesByPage[currentPage] || [];
+      // 按 field 分组
+      const rulesByField = {};
+      pageRules.forEach(r => {
+        if (!rulesByField[r.field]) rulesByField[r.field] = [];
+        rulesByField[r.field].push(r);
+      });
+
       const jumpTo = (id) => {
         const el = document.getElementById(id);
         if (el) {
@@ -416,8 +479,6 @@
         }
       };
 
-      const totalRules = RULES_TREE.reduce((sum, m) => sum + m.rules.length, 0);
-
       return (
         <div className="fixed left-0 top-0 h-screen z-40 flex" style={{ pointerEvents: 'none' }}>
           <style>{`
@@ -428,49 +489,38 @@
             }
             .pulse-highlight { animation: pulse-highlight 1.5s ease-out; border-radius: 8px; }
           `}</style>
-          {/* 折叠标签条 */}
-          {!open && (
-            <button onClick={() => setOpen(true)} className="bg-ai-purple text-white px-2 py-4 rounded-r-lg shadow-lg hover:bg-ai-purple/90 self-start mt-20" style={{ pointerEvents: 'auto', writingMode: 'vertical-rl' }}>
-              <span className="text-xs font-bold">📋 PRD 规则</span>
-            </button>
-          )}
+          {/* 🆕 V2.5.0 改 6 收尾：完全删掉收起态的"📋 PRD 规则"竖排紫条 */}
           {/* 抽屉本体 */}
           {open && (
             <div className="bg-white border-r-2 border-ai-purple/30 shadow-xl w-60 flex flex-col" style={{ pointerEvents: 'auto' }}>
               <div className="bg-gradient-to-r from-ai-purple to-ai-purple/80 text-white p-3 flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-bold">📋 PRD 规则树</div>
-                  <div className="text-[10px] opacity-80 mt-0.5">{RULES_TREE.length} 模块 · {totalRules} 条规则</div>
+                  <div className="text-sm font-bold">📋 PRD 规则树 · {PAGE_LABELS[currentPage] || currentPage}</div>
+                  <div className="text-[10px] opacity-80 mt-0.5">{Object.keys(rulesByField).length} 字段 · {pageRules.length} 条规则</div>
                 </div>
                 <button onClick={() => setOpen(false)} className="text-white hover:bg-white/20 rounded w-6 h-6 text-sm">◀</button>
               </div>
               <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                {RULES_TREE.map((m, mi) => (
+                {Object.entries(rulesByField).map(([field, rules], mi) => (
                   <div key={mi} className="border border-gray-200 rounded-lg overflow-hidden">
-                    <button onClick={() => setExpandedModules({...expandedModules, [m.module]: !expandedModules[m.module]})} className="w-full flex items-center justify-between bg-gray-50 px-2 py-1.5 text-xs font-bold hover:bg-gray-100">
-                      <span>{m.icon} {m.module} <span className="text-gray-400 font-normal">({m.rules.length})</span></span>
-                      <span className="text-gray-400">{expandedModules[m.module] ? '▼' : '▶'}</span>
-                    </button>
-                    {expandedModules[m.module] && (
-                      <div className="bg-white">
-                        {m.rules.map((r, ri) => (
-                          <div key={ri} className="border-b border-gray-100 last:border-b-0 px-2 py-1.5 hover:bg-ai-purple-light/30 transition">
-                            <div className="flex items-start justify-between gap-1">
-                              <div className="flex-1 min-w-0">
-                                <div className="text-[11px] font-medium text-gray-800 truncate">💡 {r.title}</div>
-                                <div className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{r.brief}</div>
-                                <div className="text-[9px] text-ai-purple mt-0.5">{r.section}</div>
-                              </div>
-                              <button onClick={() => jumpTo(r.id)} className="flex-shrink-0 text-[10px] bg-ai-purple text-white px-1.5 py-0.5 rounded hover:bg-ai-purple/80" title="跳到 demo 对应位置">📍</button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="w-full flex items-center justify-between bg-ai-purple/5 px-2 py-1.5 text-xs font-bold">
+                      <span>📍 {FIELD_LABELS[field] || field} <span className="text-gray-400 font-normal">({rules.length})</span></span>
+                    </div>
+                    <div className="bg-white">
+                      {rules.map((r, ri) => (
+                        <div key={ri} className="border-b border-gray-100 last:border-b-0 px-2 py-1.5 hover:bg-ai-purple-light/30 transition">
+                          <div className="text-[11px] font-medium text-ai-purple">{r.rule}</div>
+                          <div className="text-[10px] text-gray-600 mt-0.5 leading-snug">{r.detail}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
+                {pageRules.length === 0 && (
+                  <div className="text-[10px] text-gray-400 p-3 text-center">该页暂无规则</div>
+                )}
                 <div className="text-[10px] text-gray-400 p-2 text-center">
-                  💡 点 📍 跳到 demo 紫色高亮位置
+                  💡 {Object.keys(rulesByField).length} 字段 · {pageRules.length} 条详细规则
                 </div>
               </div>
             </div>
