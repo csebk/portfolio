@@ -564,7 +564,7 @@
       // 🆕 V2.0.7 体征（语音识别·只读）默认带几条便于演示
       const [signs, setSigns] = useState(['呼吸音延长', '肺部湿啰音']);
       const [aiLoading, setAiLoading] = useState(false);
-      const [aiResult, setAiResult] = useState(null);
+      const [aiResult, setAiResult] = useState(MOCK_AI_DIAGNOSES);  // 🆕 V2.7.0 改 2A：进入 P3 立即有值（预诊信息预生成）
       // 🆕 V2.0.2 状态
       const [recording, setRecording] = useState(false);
       const [recordSec, setRecordSec] = useState(0);
@@ -899,12 +899,16 @@
                                   ta.value = merged;
                                   const ev = new Event('input', { bubbles: true });
                                   ta.dispatchEvent(ev);
+                                  // 🆕 V2.7.0 改 1A：滚动到左栏 + 1.5s 紫色高亮（让医生看到自动填入）
+                                  ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  ta.classList.add('pulse-highlight');
+                                  setTimeout(() => ta.classList.remove('pulse-highlight'), 1600);
                                 }
                                 // 接受标记 = true（草稿保留，加 ✅）
                                 setChiefAccepted(true);
                               }}
                               className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
-                              title="AI 语义合并到左栏主诉（不清空）"
+                              title="AI 语义合并到左栏主诉（不清空）+ 自动滚动+高亮"
                             >✅ 接受</button>
                           )}
                         </div>
@@ -925,11 +929,15 @@
                                   ta.value = merged;
                                   const ev = new Event('input', { bubbles: true });
                                   ta.dispatchEvent(ev);
+                                  // 🆕 V2.7.0 改 1A：滚动到左栏 + 1.5s 紫色高亮
+                                  ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  ta.classList.add('pulse-highlight');
+                                  setTimeout(() => ta.classList.remove('pulse-highlight'), 1600);
                                 }
                                 setPiAccepted(true);
                               }}
                               className="ml-auto text-[9px] bg-status-green text-white px-1.5 py-0.5 rounded hover:bg-status-green/80"
-                              title="AI 语义合并到左栏现病史（不清空）"
+                              title="AI 语义合并到左栏现病史（不清空）+ 自动滚动+高亮"
                             >✅ 接受</button>
                           )}
                         </div>

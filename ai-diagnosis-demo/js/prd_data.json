@@ -1,7 +1,8 @@
 {
-  "version": "V2.6.0",
+  "version": "V2.7.0",
   "description": "AI 辅助问诊 demo · 双向追溯数据源（JSON ↔ PRD md 唯一真相）",
   "last_updated": "2026-08-28",
+  "_v270_note": "V2.7.0 改 1A:接受按钮 scrollIntoView+高亮 + 改 2A:aiResult 初值=mock",
   "rules_by_page": {
     "_comment": "按页面分组的详细规则集（V2.5.0 改造：从 PRD §X.7 6 字段汇总抽取）",
     "P-2": [
